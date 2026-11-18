@@ -156,7 +156,7 @@ main { max-width: 1536px; margin: 0 auto; padding: 26px 28px; }
 .demo-btn { color: var(--blue); }
 .editor-tabs {
   margin: 0 17px; padding: 3px; border-radius: 10px; border: 1px solid #e5e8ed; background: #eef0f4;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px;
 }
 .editor-tabs button {
   min-height: 33px; min-width: 0; padding: 5px; border: 1px solid transparent; border-radius: 7px;
@@ -287,6 +287,11 @@ details[open] summary svg { transform: rotate(180deg); }
 }
 .toggle-row input:checked { background: var(--blue); border-color: var(--blue); }
 .toggle-row input:checked::after { transform: translateX(14px); }
+
+.glare-method { display: grid; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.glare-compare { width: 100%; min-height: 33px; margin-top: 9px; font-size: 12px; }
+.glare-compare[aria-pressed=true] { background: var(--blue-wash); color: #004d9d; border-color: #b5d2f5; }
+#glare-reference { display: inline-block; margin-top: 10px; color: var(--blue); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -353,6 +358,7 @@ details[open] summary svg { transform: rotate(180deg); }
       </div>
       <div class="editor-tabs" role="tablist" aria-label="Adjustment tabs">
         <button type="button" role="tab" id="tab-compose" aria-controls="panel-compose" aria-selected="true" data-tab="compose">Layout</button>
+        <button type="button" role="tab" id="tab-glare" aria-controls="panel-glare" aria-selected="false" data-tab="glare" tabindex="-1">Glare</button>
         <button type="button" role="tab" id="tab-light" aria-controls="panel-light" aria-selected="false" data-tab="light" tabindex="-1">Lighting</button>
         <button type="button" role="tab" id="tab-cut" aria-controls="panel-cut" aria-selected="false" data-tab="cut" tabindex="-1">Cutout</button>
       </div>
@@ -392,14 +398,39 @@ details[open] summary svg { transform: rotate(180deg); }
             <label class="slider"><span>Spacing <output data-out="gap"></output></span><input type="range" min="2" max="22" data-setting="gap"></label>
           </section>
         </div>
-        <div class="settings-page" id="panel-light" role="tabpanel" aria-labelledby="tab-light" data-panel="light" hidden>
-          <section class="setting-section glare-section">
+        <div class="settings-page" id="panel-glare" role="tabpanel" aria-labelledby="tab-glare" data-panel="glare" hidden>
+          <section class="setting-section">
             <label class="toggle-row">
               <span>Reduce glare</span>
               <input type="checkbox" role="switch" data-setting="glare" aria-describedby="glare-note" checked>
             </label>
             <p class="field-note" id="glare-note">Repairs small highlights on colored covers.</p>
+            <div id="glare-controls">
+              <label class="glare-method"><span>Repair method</span>
+                <select data-setting="glareMethod">
+                  <option value="texture">Local texture</option>
+                  <option value="telea">Telea · Fast marching</option>
+                  <option value="biharmonic">Biharmonic</option>
+                  <option value="specular">Specular separation</option>
+                </select>
+              </label>
+              <p class="field-note" id="glare-method-note"></p>
+              <button type="button" id="glare-compare" class="button secondary glare-compare" aria-pressed="false">Preview before repair</button>
+              <label class="slider" title="Increase to include fainter highlights"><span>Detection sensitivity <output data-out="glareSensitivity"></output></span><input type="range" min="0" max="100" data-setting="glareSensitivity"></label>
+              <label class="slider" title="Blend the repair with the original"><span>Repair strength <output data-out="glareStrength"></output></span><input type="range" min="0" max="100" data-setting="glareStrength"></label>
+              <details>
+                <summary>Advanced repair settings <svg aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+                <label class="slider" title="Make the transition gentler near the edge"><span>Edge feather <output data-out="glareFeather"></output></span><input type="range" min="0" max="100" data-setting="glareFeather"></label>
+                <label class="slider" data-glare-for="texture"><span>Texture search reach <output data-out="glareSearch"></output></span><input type="range" min="50" max="150" step="5" data-setting="glareSearch"></label>
+                <label class="slider" data-glare-for="telea" hidden><span>Neighborhood radius <output data-out="glareRadius"></output></span><input type="range" min="2" max="8" data-setting="glareRadius"></label>
+                <label class="slider" data-glare-for="biharmonic" hidden><span>Solver iterations <output data-out="glareIterations"></output></span><input type="range" min="60" max="420" step="20" data-setting="glareIterations"></label>
+                <label class="slider" data-glare-for="specular" hidden><span>Detail retention <output data-out="glareRetention"></output></span><input type="range" min="0" max="100" data-setting="glareRetention"></label>
+                <a id="glare-reference" href="https://pubmed.ncbi.nlm.nih.gov/15449582/" target="_blank" rel="noopener noreferrer">Method reference</a>
+              </details>
+            </div>
           </section>
+        </div>
+        <div class="settings-page" id="panel-light" role="tabpanel" aria-labelledby="tab-light" data-panel="light" hidden>
           <section class="setting-section">
             <h3>Background</h3>
             <div class="swatches" aria-label="Background colors">
@@ -818,6 +849,205 @@ details[open] summary svg { transform: rotate(180deg); }
   return { analyze, modulo, rectifiedCut };
 })();
 </script>
+<script>const GlareMethods = (() => {
+  const clamp = (value, lo, hi) => Math.min(hi, Math.max(lo, value));
+  const linear = value => {
+    const s = value / 255;
+    return s <= .04045 ? s / 12.92 : ((s + .055) / 1.055) ** 2.4;
+  };
+  const srgb = value => 255 * (value <= .0031308 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - .055);
+
+  // A local dichromatic fit in linear light. A clipped channel contributes no measurement.
+  function specular(source, paper, retention) {
+    const base = paper.map(linear), rgb = source.map(linear);
+    const channels = [0, 1, 2].filter(c => source[c] < 249);
+    if (channels.length < 2) return paper;
+    const mean = values => channels.reduce((sum, c) => sum + values[c], 0) / channels.length;
+    const bx = mean(base), by = mean(rgb);
+    let covariance = .002, variance = .002;
+    for (const c of channels) {
+      covariance += (base[c] - bx) * (rgb[c] - by);
+      variance += (base[c] - bx) ** 2;
+    }
+    const slope = clamp(covariance / variance, .68, 1.34);
+    const highlight = clamp(by - slope * bx, 0, 1);
+    const confidence = clamp(1 - 3 * mean(rgb.map((v, c) => Math.abs(v - slope * base[c] - highlight))), 0, 1);
+    return base.map((v, c) => {
+      const diffuse = source[c] < 249 ? rgb[c] - highlight : v * slope;
+      const weighted = clamp(v + (diffuse - v) * (retention / 100) * confidence, 0, 1);
+      return clamp(srgb(weighted), paper[c] - 25, paper[c] + 25);
+    });
+  }
+
+  class Front {
+    items = [];
+    push(index, time) {
+      const heap = this.items;
+      let i = heap.length;
+      heap.push({ index, time });
+      while (i) {
+        const parent = (i - 1) >> 1;
+        if (heap[parent].time <= time) break;
+        heap[i] = heap[parent];
+        i = parent;
+      }
+      heap[i] = { index, time };
+    }
+    pop() {
+      const heap = this.items, first = heap[0], tail = heap.pop();
+      if (!heap.length) return first;
+      let i = 0;
+      while (i * 2 + 1 < heap.length) {
+        let child = i * 2 + 1;
+        if (child + 1 < heap.length && heap[child + 1].time < heap[child].time) child++;
+        if (heap[child].time >= tail.time) break;
+        heap[i] = heap[child];
+        i = child;
+      }
+      heap[i] = tail;
+      return first;
+    }
+  }
+
+  // Telea's ordering solves the upwind Eikonal update. Values use a weighted
+  // first-order extrapolation from the already accepted side of the front.
+  function telea(field, radius) {
+    const { values, unknown, points, width } = field;
+    const time = new Float64Array(unknown.length);
+    const status = unknown.slice();
+    const front = new Front();
+    for (const p of points) time[p] = Infinity;
+    const accepted = p => status[p] === 0;
+    const knownTime = p => accepted(p) ? time[p] : Infinity;
+    const offsets = [-1, 1, -width, width];
+    const neighborhood = [];
+    for (let y = -radius; y <= radius; y++) {
+      for (let x = -radius; x <= radius; x++) {
+        const d2 = x * x + y * y;
+        if (d2 && d2 <= radius * radius) neighborhood.push({ d2, x, y, offset: y * width + x });
+      }
+    }
+    function offer(p) {
+      const horizontal = Math.min(knownTime(p - 1), knownTime(p + 1));
+      const vertical = Math.min(knownTime(p - width), knownTime(p + width));
+      const delta = Math.abs(horizontal - vertical);
+      const candidate = delta < 1 ? (horizontal + vertical + Math.sqrt(2 - delta ** 2)) / 2 :
+        Math.min(horizontal, vertical) + 1;
+      if (candidate < time[p]) {
+        time[p] = candidate;
+        front.push(p, candidate);
+      }
+    }
+    function gradient(q, step, c) {
+      const lo = accepted(q - step), hi = accepted(q + step);
+      if (!lo && !hi) return 0;
+      return ((hi ? values[(q + step) * 3 + c] : values[q * 3 + c]) -
+        (lo ? values[(q - step) * 3 + c] : values[q * 3 + c])) / (lo && hi ? 2 : 1);
+    }
+    for (const p of points) offer(p);
+    while (front.items.length) {
+      const item = front.pop(), p = item.index;
+      if (accepted(p) || time[p] !== item.time) continue;
+      const gradientTime = step => {
+        const lo = knownTime(p - step), hi = knownTime(p + step);
+        if (Number.isFinite(lo) && Number.isFinite(hi)) return (hi - lo) / 2;
+        if (Number.isFinite(lo)) return time[p] - lo;
+        if (Number.isFinite(hi)) return hi - time[p];
+        return 0;
+      };
+      const nx = gradientTime(1), ny = gradientTime(width);
+      const total = [0, 0, 0];
+      let weights = 0;
+      for (const { x, y, offset, d2 } of neighborhood) {
+        const q = p + offset;
+        if (!accepted(q)) continue;
+        const direction = .02 + Math.abs(x * nx + y * ny) / Math.sqrt(d2);
+        const weight = direction / (d2 * (1 + Math.abs(time[p] - time[q])));
+        weights += weight;
+        for (let c = 0; c < 3; c++) {
+          total[c] += weight * (values[q * 3 + c] - x * gradient(q, 1, c) - y * gradient(q, width, c));
+        }
+      }
+      if (weights) {
+        for (let c = 0; c < 3; c++) {
+          const base = values[p * 3 + c];
+          values[p * 3 + c] = clamp(total[c] / weights, base - 24, base + 24);
+        }
+      }
+      status[p] = 0;
+      for (const offset of offsets) if (!accepted(p + offset)) offer(p + offset);
+    }
+  }
+
+  // Solve the discrete squared Laplacian with fixed known pixels using CG.
+  function biharmonic(field, maxIterations) {
+    const { values, points, width, unknown } = field;
+    const n = points.length;
+    if (!n) return;
+    const stencil = [[-1, -8], [1, -8], [-width, -8], [width, -8],
+      [-width - 1, 2], [-width + 1, 2], [width - 1, 2], [width + 1, 2],
+      [-2, 1], [2, 1], [-2 * width, 1], [2 * width, 1]];
+    const row = new Int32Array(unknown.length).fill(-1);
+    for (let i = 0; i < n; i++) row[points[i]] = i;
+    const neighbors = new Int32Array(n * stencil.length);
+    const rhs = new Float64Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < stencil.length; j++) {
+        const [offset, weight] = stencil[j], p = points[i] + offset;
+        const sourceRow = row[p];
+        neighbors[i * stencil.length + j] = sourceRow;
+        if (sourceRow >= 0) continue;
+        for (let c = 0; c < 3; c++) rhs[i * 3 + c] -= weight * values[p * 3 + c];
+      }
+    }
+    const weights = stencil.map(item => item[1]);
+    function multiply(vector, result) {
+      for (let i = 0; i < n; i++) {
+        let value = vector[i] * 20;
+        const start = i * weights.length;
+        for (let j = 0; j < weights.length; j++) {
+          const neighbor = neighbors[start + j];
+          if (neighbor >= 0) value += weights[j] * vector[neighbor];
+        }
+        result[i] = value;
+      }
+    }
+    const x = new Float64Array(n), residual = new Float64Array(n), direction = new Float64Array(n), q = new Float64Array(n);
+    const iterations = Math.min(maxIterations, Math.max(25, Math.floor(1650000 / n)));
+    for (let c = 0; c < 3; c++) {
+      for (let i = 0; i < n; i++) x[i] = values[points[i] * 3 + c];
+      multiply(x, q);
+      let error = 0;
+      for (let i = 0; i < n; i++) {
+        direction[i] = residual[i] = rhs[i * 3 + c] - q[i];
+        error += residual[i] ** 2;
+      }
+      for (let iteration = 0; iteration < iterations && error > n * .00005; iteration++) {
+        multiply(direction, q);
+        let curvature = 0;
+        for (let i = 0; i < n; i++) curvature += direction[i] * q[i];
+        if (curvature <= 0) break;
+        const step = error / curvature;
+        let next = 0;
+        for (let i = 0; i < n; i++) {
+          x[i] += step * direction[i];
+          residual[i] -= step * q[i];
+          next += residual[i] ** 2;
+        }
+        const change = next / error;
+        for (let i = 0; i < n; i++) direction[i] = residual[i] + change * direction[i];
+        error = next;
+      }
+      for (let i = 0; i < n; i++) {
+        const p = points[i] * 3 + c, base = values[p];
+        values[p] = clamp(x[i], base - 28, base + 28);
+      }
+    }
+  }
+
+  return { specular, telea, biharmonic };
+})();
+</script>
 <script>const Glare = (() => {
   const luma = (r, g, b) => .2126 * r + .7152 * g + .0722 * b;
   const chroma = (r, g, b) => Math.max(r, g, b) - Math.min(r, g, b);
@@ -828,14 +1058,20 @@ details[open] summary svg { transform: rotate(180deg); }
     return t * t * (3 - 2 * t);
   };
 
-  function seeds(pixels, labels, width, height) {
+  const defaults = Object.freeze({
+    glareMethod: 'texture', glareSensitivity: 50, glareStrength: 100, glareFeather: 50,
+    glareSearch: 100, glareRadius: 4, glareIterations: 240, glareRetention: 70
+  });
+
+  function seeds(pixels, labels, width, height, sensitivity) {
+    const shift = (sensitivity - 50) / 50;
     const seen = new Uint8Array(labels.length);
     for (let i = 0; i < labels.length; i++) {
       if (!labels[i]) continue;
       const p = i * 4;
       const r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
-      if (Math.max(r, g, b) >= 225 && Math.min(r, g, b) >= 155 &&
-          luma(r, g, b) >= 178 && chroma(r, g, b) <= 76) seen[i] = 1;
+      if (Math.max(r, g, b) >= 225 - 20 * shift && Math.min(r, g, b) >= 155 - 26 * shift &&
+          luma(r, g, b) >= 178 - 23 * shift && chroma(r, g, b) <= 76 + 12 * shift) seen[i] = 1;
     }
 
     const groups = [];
@@ -914,7 +1150,8 @@ details[open] summary svg { transform: rotate(180deg); }
     };
   }
 
-  function grow(pixels, labels, stride, hit, box, paper) {
+  function grow(pixels, labels, stride, hit, box, paper, sensitivity) {
+    const shift = (sensitivity - 50) / 50;
     const width = box.x1 - box.x0 + 1, height = box.y1 - box.y0 + 1;
     const alpha = new Uint8Array(width * height);
     const seedMap = new Uint8Array(alpha.length);
@@ -939,8 +1176,9 @@ details[open] summary svg { transform: rotate(180deg); }
       const saturation = chroma(r, g, b) / Math.max(1, r, g, b);
       const diffuseSaturation = chroma(pr, pg, pb) / Math.max(1, pr, pg, pb);
       const loss = diffuseSaturation - saturation;
-      if (lift < 13 || loss < .038 || Math.min(r - pr, g - pg, b - pb) < -13) return;
-      alpha[i] = Math.round(255 * smooth(12, 38, lift) * smooth(.032, .09, loss));
+      if (lift < 13 - 5 * shift || loss < .038 - .012 * shift || Math.min(r - pr, g - pg, b - pb) < -13) return;
+      alpha[i] = Math.round(255 * smooth(12 - 5 * shift, 38 - 8 * shift, lift) *
+        smooth(.032 - .012 * shift, .09 - .016 * shift, loss));
       frontier.push(i);
       if (seedMap[i]) core++;
       if (lift >= 19 && lift <= 61 && !seedMap[i]) {
@@ -963,9 +1201,9 @@ details[open] summary svg { transform: rotate(180deg); }
     return { alpha, width, height, frontier };
   }
 
-  function textureOffset(pixels, labels, stride, height, hit, box, shape, paper) {
+  function textureOffset(pixels, labels, stride, height, hit, box, shape, paper, search) {
     const step = Math.max(6, Math.round(Math.max(hit.x1 - hit.x0, hit.y1 - hit.y0) / 6));
-    const limit = step * 12;
+    const limit = step * Math.round(12 * search / 100);
     const samples = [];
     for (let y = 2; y < shape.height - 2; y += 5) {
       for (let x = 2; x < shape.width - 2; x += 5) {
@@ -998,12 +1236,12 @@ details[open] summary svg { transform: rotate(180deg); }
     return best;
   }
 
-  function repair(prepared, mask) {
+  function detect(prepared, mask, sensitivity) {
     const { pixels, width, height } = prepared;
     const { labels, components } = mask;
     const byId = new Map(components.map(c => [c.id, c]));
     const results = [], covered = new Uint8Array(labels.length);
-    for (const hit of seeds(pixels, labels, width, height)) {
+    for (const hit of seeds(pixels, labels, width, height, sensitivity)) {
       const region = byId.get(hit.id);
       if (hit.points.some(p => covered[p])) continue;
       const shortSide = Math.min(region.w, region.h);
@@ -1018,17 +1256,75 @@ details[open] summary svg { transform: rotate(180deg); }
         y1: Math.min(height - 1, region.y + region.h - 1, hit.y1 + pad) };
       const paper = nearbyPaper(pixels, labels, width, hit, box, pad);
       if (!paper) continue;
-      const shape = grow(pixels, labels, width, hit, box, paper);
+      const shape = grow(pixels, labels, width, hit, box, paper, sensitivity);
       if (!shape || shape.frontier.length > region.area * .075) continue;
-      const donor = textureOffset(pixels, labels, width, height, hit, box, shape, paper);
-      const data = new Uint8ClampedArray(shape.width * shape.height * 4);
+      // A highlight with several bright cores is corrected once.
       for (const i of shape.frontier) {
         if (!shape.alpha[i]) continue;
-        const x = i % shape.width + box.x0, y = Math.floor(i / shape.width) + box.y0;
-        const original = y * width + x;
-        if (covered[original]) continue;
-        const color = paper.colorAt(x, y);
-        if (donor) {
+        const source = (Math.floor(i / shape.width) + box.y0) * width + (i % shape.width) + box.x0;
+        if (covered[source]) shape.alpha[i] = 0;
+        else covered[source] = 1;
+      }
+      results.push({ hit, box, paper, shape });
+    }
+    return results;
+  }
+
+  function correctionField(prepared, labels, area, pad) {
+    const { hit, box, shape, paper } = area;
+    const width = shape.width + pad * 2, height = shape.height + pad * 2;
+    const values = new Float32Array(width * height * 3), unknown = new Uint8Array(width * height), points = [];
+    const stride = prepared.width, source = prepared.pixels;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = y * width + x;
+        const sx = box.x0 + x - pad, sy = box.y0 + y - pad;
+        const [pr, pg, pb] = paper.colorAt(sx, sy);
+        let rgb = [pr, pg, pb];
+        if (x >= pad && x < width - pad && y >= pad && y < height - pad &&
+            shape.alpha[(y - pad) * shape.width + x - pad]) {
+          unknown[i] = 1;
+          points.push(i);
+        } else if (sx >= 0 && sx < stride && sy >= 0 && sy < prepared.height && labels[sy * stride + sx] === hit.id) {
+          const p = (sy * stride + sx) * 4, r = source[p], g = source[p + 1], b = source[p + 2];
+          // Keep the support on the same paper. Ink and leftover glare cannot bleed into the hole.
+          if (Math.abs(r - pr) < 21 && Math.abs(g - pg) < 17 && Math.abs(b - pb) < 20) rgb = [r, g, b];
+        }
+        values.set(rgb, i * 3);
+      }
+    }
+    return { values, unknown, points, width };
+  }
+
+  function repair(prepared, labels, areas, options) {
+    const { pixels, width, height } = prepared;
+    const { glareMethod, glareStrength, glareFeather } = options;
+    const falloff = 2 ** ((glareFeather - 50) / 45);
+    return areas.map(area => {
+      const { hit, box, shape, paper } = area;
+      const donor = glareMethod === 'texture' ?
+        textureOffset(pixels, labels, width, height, hit, box, shape, paper, options.glareSearch) : null;
+      const pad = glareMethod === 'telea' ? options.glareRadius + 2 : 2;
+      let field = null;
+      if (glareMethod === 'telea' || glareMethod === 'biharmonic') {
+        field = correctionField(prepared, labels, area, pad);
+        if (glareMethod === 'telea') GlareMethods.telea(field, options.glareRadius);
+        else GlareMethods.biharmonic(field, options.glareIterations);
+      }
+      const data = new Uint8ClampedArray(shape.width * shape.height * 4);
+      for (const i of shape.frontier) {
+        const alpha = Math.round(255 * (shape.alpha[i] / 255) ** falloff * glareStrength / 100);
+        if (!alpha) continue;
+        const col = i % shape.width, row = Math.floor(i / shape.width);
+        const x = col + box.x0, y = row + box.y0;
+        let color = paper.colorAt(x, y);
+        if (field) {
+          const p = ((row + pad) * field.width + col + pad) * 3;
+          color = field.values.subarray(p, p + 3);
+        } else if (glareMethod === 'specular') {
+          const p = (y * width + x) * 4;
+          color = GlareMethods.specular([pixels[p], pixels[p + 1], pixels[p + 2]], color, options.glareRetention);
+        } else if (donor) {
           const sx = x + donor.dx, sy = y + donor.dy, d = (sy * width + sx) * 4;
           if (sx >= 2 && sx < width - 2 && sy >= 2 && sy < height - 2 && labels[sy * width + sx] === hit.id &&
               Math.abs(luma(pixels[d], pixels[d + 1], pixels[d + 2]) - paper.light) < 19) {
@@ -1040,15 +1336,13 @@ details[open] summary svg { transform: rotate(180deg); }
           }
         }
         data.set(color, i * 4);
-        data[i * 4 + 3] = shape.alpha[i];
-        covered[original] = 1;
+        data[i * 4 + 3] = alpha;
       }
-      results.push({ id: hit.id, x: box.x0, y: box.y0, w: shape.width, h: shape.height, data });
-    }
-    return results;
+      return { id: hit.id, x: box.x0, y: box.y0, w: shape.width, h: shape.height, data };
+    });
   }
 
-  return { repair };
+  return { defaults, detect, repair };
 })();
 </script>
 <script>const Studio = (() => {
@@ -1464,15 +1758,25 @@ details[open] summary svg { transform: rotate(180deg); }
     if (!mask.components.length) return false;
 
     const plan = planPieces(prepared, mask, settings);
-    if (settings.glare && !mask.glare) {
-      mask.glare = Glare.repair(prepared, mask).map(repair => {
-        const layer = canvas(repair.w, repair.h);
-        layer.getContext('2d').putImageData(new ImageData(repair.data, repair.w, repair.h), 0, 0);
-        const { data, ...bounds } = repair;
-        return { ...bounds, layer };
-      });
+    let repairs = [];
+    if (settings.glare && settings.glareStrength > 0) {
+      const sensitivity = settings.glareSensitivity;
+      if (mask.glareDetection?.sensitivity !== sensitivity) {
+        mask.glareDetection = { sensitivity, areas: Glare.detect(prepared, mask, sensitivity) };
+      }
+      const { glareMethod, glareStrength, glareFeather, glareSearch, glareRadius, glareIterations, glareRetention } = settings;
+      const key = [sensitivity, glareMethod, glareStrength, glareFeather, glareSearch, glareRadius, glareIterations, glareRetention].join(':');
+      if (mask.glareResult?.key !== key) {
+        const layers = Glare.repair(prepared, mask.labels, mask.glareDetection.areas, settings).map(repair => {
+          const layer = canvas(repair.w, repair.h);
+          layer.getContext('2d').putImageData(new ImageData(repair.data, repair.w, repair.h), 0, 0);
+          const { data, ...bounds } = repair;
+          return { ...bounds, layer };
+        });
+        mask.glareResult = { key, layers };
+      }
+      repairs = mask.glareResult.layers;
     }
-    const repairs = settings.glare ? mask.glare : [];
     plan.glareCount = repairs.length;
     const { pieces } = plan;
     const left = Math.min(...pieces.map(p => p.x - p.w / 2));
@@ -1589,6 +1893,7 @@ details[open] summary svg { transform: rotate(180deg); }
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const defaults = {
+    ...Glare.defaults,
     background: '#e9e7e3', glare: true, light: 'soft', shadow: 32, softness: 48, direction: 'se', exposure: 0,
     ratio: 'square', margin: 17, layout: 'original', gap: 6, orientation: 'auto', tolerance: 43, edge: 26, size: 1600, format: 'png'
   };
@@ -1596,6 +1901,12 @@ details[open] summary svg { transform: rotate(180deg); }
     soft: { shadow: 32, softness: 48, direction: 'se' },
     side: { shadow: 62, softness: 22, direction: 'e' },
     flat: { shadow: 0, softness: 48, direction: 'se' }
+  };
+  const glareDescriptions = {
+    texture: ['Matches paper texture from the same cover.', 'https://pubmed.ncbi.nlm.nih.gov/15449582/', 'Related paper · Exemplar inpainting'],
+    telea: ['Propagates nearby colors and gradients inward.', 'https://research.tue.nl/p/en/research-outputs/an-image-inpainting-technique-based-on-the-fast-marching-method', 'Method reference · Telea (2004)'],
+    biharmonic: ['Fills the highlight with a smooth surface.', 'https://scikit-image.org/docs/stable/api/skimage.restoration.html#skimage.restoration.inpaint_biharmonic', 'Method reference · scikit-image'],
+    specular: ['Estimates diffuse color from the recorded channels.', 'https://pubmed.ncbi.nlm.nih.gov/15688556/', 'Related paper · Tan and Ikeuchi']
   };
   const settings = { ...defaults };
   const preferenceKey = 'folio-studio-v1.1';
@@ -1610,10 +1921,11 @@ details[open] summary svg { transform: rotate(180deg); }
   const preview = $('#preview');
   const fileInput = $('#files');
   const settingInputs = $$('[data-setting]');
-  const percentKeys = new Set(['shadow', 'softness', 'exposure', 'margin', 'gap', 'edge']);
+  const percentKeys = new Set(['shadow', 'softness', 'exposure', 'margin', 'gap', 'edge',
+    'glareSensitivity', 'glareStrength', 'glareFeather', 'glareSearch', 'glareRetention']);
   const icon = name => '<svg aria-hidden="true"><use href="#i-' + name + '"/></svg>';
   let selected = null, mode = 'result', brush = 'keep', pointer = null, lastPoint = null;
-  let scheduled = false, exporting = false, adding = false, toastTimer;
+  let scheduled = false, exporting = false, adding = false, previewBeforeGlare = false, toastTimer;
 
   function toggle(buttons, key, value) {
     for (const button of buttons) button.setAttribute('aria-pressed', String(button.dataset[key] === value));
@@ -1628,9 +1940,19 @@ details[open] summary svg { transform: rotate(180deg); }
       else input.value = String(settings[key]);
       if (input.type === 'range') {
         const sign = key === 'exposure' && settings[key] > 0 ? '+' : '';
-        $('[data-out="' + key + '"]').textContent = sign + settings[key] + (percentKeys.has(key) ? '%' : '');
+        $('[data-out="' + key + '"]').textContent = sign + settings[key] + (percentKeys.has(key) ? '%' : key === 'glareRadius' ? ' px' : '');
       }
     }
+    const [methodDescription, methodSource, methodTitle] = glareDescriptions[settings.glareMethod] ?? glareDescriptions.texture;
+    $('#glare-controls').hidden = !settings.glare;
+    $('#glare-method-note').textContent = methodDescription;
+    $('#glare-reference').href = methodSource;
+    $('#glare-reference').textContent = methodTitle;
+    for (const row of $$('[data-glare-for]')) row.hidden = row.dataset.glareFor !== settings.glareMethod;
+    const compare = $('#glare-compare');
+    compare.disabled = !selected?.prepared || settings.glareStrength === 0;
+    compare.setAttribute('aria-pressed', String(previewBeforeGlare));
+    compare.textContent = previewBeforeGlare ? 'Preview after repair' : 'Preview before repair';
     const swatches = $$('[data-background]');
     toggle(swatches, 'background', settings.background);
     toggle($$('[data-light]'), 'light', settings.light);
@@ -1730,6 +2052,7 @@ details[open] summary svg { transform: rotate(180deg); }
 
   function setMode(next) {
     mode = next;
+    if (mode !== 'result') previewBeforeGlare = false;
     toggle($$('[data-view]'), 'view', mode);
     sync();
     schedule();
@@ -1789,10 +2112,12 @@ details[open] summary svg { transform: rotate(180deg); }
     $('#paper').classList.toggle('checker', mode === 'result' && settings.background === 'transparent');
     $('#paper').classList.toggle('mask-mode', mode === 'mask');
     if (mode === 'result') {
-      const plan = Studio.render(preview, prepared.source, prepared, mask, settings, selected, 960);
+      const previewSettings = previewBeforeGlare ? { ...settings, glare: false } : settings;
+      const plan = Studio.render(preview, prepared.source, prepared, mask, previewSettings, selected, 960);
       let corrected = plan?.rectified ? 'Edges straightened' : '';
       if (plan?.turned) corrected = plan.turned === 1 ? '1 book straightened' : plan.turned + ' books straightened';
-      const changes = [corrected, plan?.glareCount ? 'Glare reduced' : ''].filter(Boolean);
+      const glareStatus = previewBeforeGlare ? 'Before glare repair' : plan?.glareCount ? 'Glare reduced' : '';
+      const changes = [corrected, glareStatus].filter(Boolean);
       $('#preview-status').textContent = !plan ? 'Cutout needs attention' : changes.join(' · ') || 'Result';
       if (plan?.artwork) $('#orientation-note').textContent = 'Orientation estimated from the cover. Use the rotate buttons if needed.';
     } else {
@@ -1814,6 +2139,10 @@ details[open] summary svg { transform: rotate(180deg); }
 
   function change(key, value) {
     settings[key] = value;
+    if (key.startsWith('glare')) {
+      previewBeforeGlare = false;
+      if (mode !== 'result') { setMode('result'); return; }
+    }
     if (key === 'shadow' || key === 'softness' || key === 'direction') settings.light = 'custom';
     if (key === 'background' && value === 'transparent') toast('Transparent backgrounds are exported as PNG.');
     sync();
@@ -1827,6 +2156,10 @@ details[open] summary svg { transform: rotate(180deg); }
       else change(key, typeof defaults[key] === 'number' ? Number(input.value) : input.value);
     });
   }
+  $('#glare-compare').onclick = () => {
+    previewBeforeGlare = !previewBeforeGlare;
+    setMode('result');
+  };
   for (const button of $$('[data-background]')) button.onclick = () => change('background', button.dataset.background);
   for (const button of $$('[data-ratio]')) button.onclick = () => change('ratio', button.dataset.ratio);
   for (const button of $$('[data-orientation]')) button.onclick = () => {
@@ -1834,6 +2167,11 @@ details[open] summary svg { transform: rotate(180deg); }
     if (mode !== 'result') setMode('result');
   };
   function selectTab(key) {
+    if (key !== 'glare' && previewBeforeGlare) {
+      previewBeforeGlare = false;
+      sync();
+      schedule();
+    }
     for (const tab of $$('[data-tab]')) {
       const active = tab.dataset.tab === key;
       tab.setAttribute('aria-selected', String(active));
@@ -1877,6 +2215,7 @@ details[open] summary svg { transform: rotate(180deg); }
   $('#custom-bg').oninput = event => change('background', event.target.value);
   $('#reset').onclick = () => {
     Object.assign(settings, defaults);
+    previewBeforeGlare = false;
     sync();
     schedule();
     toast('Default settings restored.');
