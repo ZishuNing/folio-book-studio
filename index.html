@@ -3,266 +3,327 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="册光，在浏览器内批量整理书籍产品照。">
-<title>册光 · 书籍产品图</title>
-<style>:root{color-scheme:light;--base:#f2efe9;--paper:#fbfaf6;--surface:#f7f5f0;--ink:#292521;--muted:#736a60;--line:#dfd9ce;--accent:#b53e27;--accent-active:#f4e4dc;--font:Inter,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
-*{box-sizing:border-box}
-body{margin:0;background:var(--base);color:var(--ink);font:14px/1.45 var(--font)}
-button,select,input{font:inherit}
-button{cursor:pointer}
-button:disabled{cursor:default;opacity:.48}
-button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,canvas:focus-visible{outline:2px solid #c7472e;outline-offset:3px}
-[hidden]{display:none!important}
-svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:middle}
-.svg-defs,.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.site-head{height:68px;padding:0 max(30px,calc((100vw - 1480px)/2));background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:11px;font-size:21px;font-weight:800;white-space:nowrap;letter-spacing:-.04em}
-.brand small{font:600 10px var(--mono);letter-spacing:.15em;color:var(--muted);margin-left:9px;vertical-align:2px}
-.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:var(--accent);color:white;border-radius:4px}
-.brand-mark svg{width:21px;height:21px}
-.local{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}
-.local svg{width:16px;height:16px;color:#4a6752}
-main{max-width:1540px;margin:auto;padding:26px 30px 34px}
-.intro{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:0 0 23px}
-.intro h1{font-size:clamp(30px,3.4vw,47px);line-height:1.15;letter-spacing:-.085em;margin:0 0 6px;font-weight:820}
-.intro h1 span{color:var(--accent);margin-left:4px}
-.intro p{color:var(--muted);margin:0;font-size:13px}
-.button{min-height:40px;padding:0 14px;display:inline-flex;justify-content:center;align-items:center;gap:8px;border:1px solid transparent;border-radius:5px;font-weight:670;white-space:nowrap}
-.button svg{width:16px;height:16px}
-.primary{background:var(--accent);color:#fff}
-.primary:hover:not(:disabled){background:#96321f}
-.secondary{border-color:var(--line);color:var(--ink);background:var(--paper)}
-.secondary:hover:not(:disabled){background:#efeae0;border-color:#c7baaa}
-.workspace{display:grid;grid-template-columns:minmax(176px,220px) minmax(0,1fr) minmax(270px,304px);gap:15px;align-items:stretch}
-.panel{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-.panel-head{min-height:55px;display:flex;align-items:center;justify-content:space-between;gap:6px;border-bottom:1px solid var(--line);padding:0 14px}
-.panel-head h2{margin:0;font-size:14px;line-height:1;display:flex;align-items:center;gap:8px;white-space:nowrap}
-.panel-head h2 svg{color:#74685c}
-.pill{padding:2px 7px;font:11px/1.3 var(--mono);border-radius:20px;background:#eee9e0;color:#6a5d50}
-.queue-content{padding:11px;display:flex;flex-direction:column;gap:10px}
-.items{display:flex;flex-direction:column;gap:7px;max-height:490px;overflow:auto}
-.items:empty{display:none}
-.item{position:relative;display:flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:5px;padding:4px;background:var(--surface);min-height:59px}
-.item.selected{border-color:#c37261;background:#f7ebe4}
-.item-pick{display:flex;align-items:center;gap:8px;min-width:0;flex:1;border:0;background:none;text-align:left;color:inherit;padding:0}
-.item-image{width:43px;height:47px;flex:none;object-fit:cover;border-radius:3px;background:#dfd9ce;display:grid;place-items:center}
-.item-title,.item-meta{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.item-title{font-size:12px;font-weight:700}
-.item-meta{font-size:10px;color:var(--muted);margin-top:4px}
-.item-remove{background:transparent;border:0;color:var(--muted);padding:4px;display:grid;place-items:center}
-.item-remove:hover{color:var(--accent);background:#ecddd4;border-radius:3px}
-.item-remove svg{width:13px;height:13px}
-.drop{width:100%;min-height:113px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:#f8f5ed;border:1px dashed #c7b9a4;border-radius:5px;color:var(--ink);padding:10px 4px}
-.drop:hover,.dragover .drop{border-color:var(--accent);background:var(--accent-active)}
-.drop-icon{width:26px;height:26px;display:grid;place-items:center;background:#eee7da;border-radius:4px;color:var(--accent)}
-.drop strong{font-size:12px}
-.drop small{color:var(--muted);font-size:10px}
-.queue-foot{margin:auto 0 0;border-top:1px solid var(--line);padding:11px;color:var(--muted);display:flex;align-items:flex-start;gap:6px;font-size:10px}
-.queue-foot svg{width:14px;height:14px}
-.text-btn{background:none;border:0;color:var(--muted);font-size:11px;font-weight:650;padding:5px 4px;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;border-radius:3px}
-.text-btn:hover:not(:disabled){color:var(--accent);background:var(--accent-active)}
-.text-btn svg{width:14px;height:14px}
-.demo-btn{align-self:center;color:var(--accent)}
-.segmented{display:inline-flex;align-items:center;gap:2px;background:#f0ece4;border:1px solid #e5ded3;border-radius:5px;padding:2px}
-.segmented button{border:1px solid transparent;border-radius:3px;color:var(--muted);background:transparent;font-size:11px;white-space:nowrap;padding:4px 10px;font-weight:630}
-.segmented button[aria-pressed=true]{color:var(--ink);background:var(--paper);border-color:#ded6c8;box-shadow:0 1px 2px #40302012}
-.stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:530px;padding:23px;background-color:#e3dfd7;background-image:radial-gradient(#bcb2a4 0.55px,transparent 0.55px);background-size:15px 15px;overflow:hidden}
-.paper{display:flex;align-items:center;justify-content:center;max-width:100%;max-height:100%;box-shadow:0 1px 2px #40302035,0 8px 26px #40302020;background:#e9e7e3}
-.paper.checker{background-color:#fff}
-#preview{display:block;max-width:100%;max-height:min(58vh,590px);width:auto;height:auto;object-fit:contain}
-.paper.mask-mode #preview{touch-action:none;cursor:crosshair}
-.empty{text-align:center;color:var(--muted);max-width:300px}
-.empty>svg{width:38px;height:38px;color:#877968}
-.empty h3{font-size:16px;color:var(--ink);margin:10px 0 4px}
-.empty p{margin:0;font-size:12px}
-.preview-foot{min-height:38px;padding:0 13px;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);font:11px var(--mono);color:var(--muted)}
-.preview-foot>span:first-child{display:flex;align-items:center;gap:7px;font:11px var(--font)}
-.dot{width:6px;height:6px;border-radius:50%;background:#52785e;display:block}
-.dot.wait{background:#ad7454}
-.mask-tools{padding:7px 11px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
-.brush-size{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11px}
-.brush-size input{width:66px}
-.notice{background:#f8ebe0;color:#744330;border-top:1px solid #e8d6c4;padding:7px 12px;font-size:11px}
-.settings-content{display:flex;flex-direction:column}
-.setting-section{padding:12px 13px;border-bottom:1px solid var(--line)}
-.setting-section h3,.export-area h3{margin:0 0 8px;font-size:12px;display:flex;align-items:center;gap:6px}
-.setting-section h3 svg{width:15px;height:15px;color:#7a6b5e}
-.swatches{display:flex;justify-content:space-between;gap:5px}
-.swatches button,.custom-chip{width:32px;height:28px;min-width:0;display:grid;place-items:center;border-radius:4px;border:1px solid #c8bfae;background:var(--chip);padding:0;position:relative;color:#7b6c5d}
-.swatches button[aria-pressed=true]{outline:1.5px solid var(--accent);outline-offset:2px}
-.custom-chip{background:#f4f0e8;cursor:pointer}
-.custom-chip svg{width:14px;height:14px}
-.custom-chip input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
-.custom-chip:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-.checker{background-color:#fcfbf9!important;background-image:repeating-conic-gradient(#d9d5ce 0% 25%,transparent 0% 50%)!important;background-size:12px 12px!important}
-.background-label{display:flex;justify-content:space-between;margin-top:7px;font-size:10px;color:var(--muted)}
-.background-label span:last-child{font-family:var(--mono)}
-.light-grid,.ratio-grid{display:grid;gap:5px}
-.light-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-.ratio-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-.light-grid button,.ratio-grid button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:31px;padding:4px 2px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:10px;color:#62564b;white-space:nowrap}
-.light-grid button[aria-pressed=true],.ratio-grid button[aria-pressed=true]{color:#942f1e;background:var(--accent-active);border-color:#d9a296}
-.light-icon{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid currentColor}
-.light-icon.soft{background:linear-gradient(135deg,#f7eee3,#b57f68)}
-.light-icon.side{background:linear-gradient(105deg,transparent 50%,currentColor 50%)}
-.ratio{display:inline-block;width:11px;height:11px;border:1px solid currentColor;border-radius:1px}
-.ratio.portrait{width:9px;height:12px}
-.ratio.landscape{width:13px;height:9px}
-.ratio.story{width:7px;height:12px}
-.slider{display:block;margin-top:9px}
-.slider>span{display:flex;justify-content:space-between;font-size:11px;line-height:1.2;color:#524a40}
-.slider output{color:#766958;font:10px var(--mono)}
-input[type=range]{accent-color:var(--accent);cursor:pointer;margin:4px 0 0;height:13px}
-.slider input{width:100%;display:block}
-details{margin-top:7px}
-summary{color:var(--muted);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;list-style:none}
-summary::-webkit-details-marker{display:none}
-summary svg{width:13px;height:13px}
-details[open] summary svg{transform:rotate(180deg)}
-.cut-settings{padding-top:9px;padding-bottom:9px}
-.cut-settings details{margin:0}
-.cut-settings summary{color:var(--ink);font-weight:670}
-.field{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;color:#524a40;font-size:11px}
-.field-note{font-size:10px;color:var(--muted);margin:7px 0 0}
-select{width:100%;min-height:29px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:4px;padding:3px 5px;font-size:11px}
-.field select{max-width:135px}
-.export-area{padding:11px 13px 13px;margin-top:auto}
-.export-fields{display:grid;grid-template-columns:1.45fr 1fr;gap:6px;margin-bottom:7px}
-.download{width:100%;min-height:35px;font-size:12px}
-.download+.download{margin-top:5px}
-.toast{position:fixed;z-index:5;bottom:18px;left:50%;transform:translateX(-50%);padding:9px 14px;margin:0;background:#342b23;color:#fff;box-shadow:0 2px 8px #32201040;border-radius:5px;font-size:12px;max-width:calc(100vw - 28px);width:max-content}
-.dragover .stage{box-shadow:inset 0 0 0 3px #b53e2788}
-@media(max-width:1060px){main{padding:20px 18px 28px}.site-head{padding:0 18px}.workspace{gap:10px;grid-template-columns:minmax(149px,170px) minmax(0,1fr) 265px}.stage{padding:15px}}
-@media(max-width:790px){.workspace{grid-template-columns:minmax(0,1fr) 245px}.queue{grid-column:1/-1}.queue-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,172px);align-items:center;padding:8px}.items{flex-direction:row;overscroll-behavior-inline:contain}.item{min-width:147px;max-width:173px}.drop{min-height:59px;grid-column:2;grid-row:1;gap:1px}.drop-icon{width:19px;height:19px}.drop-icon svg{width:13px;height:13px}.demo-btn{grid-column:1;grid-row:1;justify-self:start}.items:not(:empty)~.demo-btn{display:none}.queue-foot{display:none}.queue .panel-head{min-height:39px}.stage{min-height:400px}}
-@media(max-width:550px){.site-head{height:55px;padding:0 12px}.brand{font-size:18px}.brand-mark{width:29px;height:29px}.brand small{margin-left:4px;font-size:8px}.local{font-size:10px;gap:3px}.local svg{width:13px;height:13px}main{padding:16px 10px 25px}.intro{align-items:center;gap:8px;margin-bottom:15px}.intro h1{font-size:30px}.intro p{font-size:11px}.intro .button{padding:0 8px;font-size:11px;gap:5px;min-height:34px}.workspace{grid-template-columns:1fr;gap:10px}.stage{min-height:0;padding:14px}.stage:has(.empty:not([hidden])){min-height:240px}#preview{max-height:55vh}.panel-head{min-height:43px}.settings-content{display:grid;grid-template-columns:1fr 1fr}.setting-section{padding:10px}.setting-section:nth-child(odd){border-right:1px solid var(--line)}.swatches{gap:4px}.swatches button,.custom-chip{width:23px;height:23px}.cut-settings{padding-top:12px}.export-area{padding:10px}.download{min-height:39px}}
-@media(prefers-reduced-motion:no-preference){button{transition:background-color .12s,color .12s,border-color .12s}}
+<meta name="description" content="在浏览器内批量整理书籍产品照。">
+<title>书籍产品图</title>
+<style>:root {
+  color-scheme: light;
+  --ink: #1c1e1b;
+  --muted: #555951;
+  --line: #d9dbd2;
+  --paper: #f9f9f5;
+  --outer: #eeefe9;
+  --stage: #e1e3dc;
+  --lime: #dff38c;
+  --lime-strong: #cfe577;
+  --font: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--outer); color: var(--ink); font: 14px/1.5 var(--font); }
+button, select, input { font: inherit; }
+button { cursor: pointer; color: inherit; }
+button:disabled { cursor: default; opacity: .45; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 2px solid #4d6523; outline-offset: 3px;
+}
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
+.svg-defs, .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.site-head {
+  height: 66px; background: #20221d; color: #fafbf3; border-bottom: 1px solid #151612;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 max(26px, calc((100vw - 1548px) / 2));
+}
+.app-title { margin: 0; font-size: 19px; font-weight: 770; line-height: 1.1; white-space: nowrap; letter-spacing: -.035em; }
+.head-actions, .local { display: flex; align-items: center; }
+.head-actions { gap: 22px; }
+.local { color: #d1d4c6; font-size: 12px; gap: 6px; }
+.local svg { width: 15px; height: 15px; color: #cbd98d; }
+.button { min-height: 40px; padding: 0 13px; display: inline-flex; justify-content: center; align-items: center; gap: 7px; white-space: nowrap; border: 1px solid transparent; border-radius: 4px; font-size: 13px; font-weight: 720; }
+.button svg { width: 16px; height: 16px; }
+.primary { color: #242819; background: var(--lime); border-color: #c4d67b; }
+.primary:hover:not(:disabled) { background: var(--lime-strong); border-color: #adbf66; }
+.secondary { background: transparent; border-color: #c7cbc0; }
+.secondary:hover:not(:disabled) { background: #eeefe7; border-color: #9a9d91; }
+main { max-width: 1600px; margin: 0 auto; padding: 19px 26px 20px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 17px; align-items: stretch; }
+.left-column { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.preview, .settings, .queue { background: var(--paper); border: 1px solid #d4d7cb; border-radius: 5px; min-width: 0; overflow: hidden; }
+.preview { display: flex; flex-direction: column; flex: 1; }
+.preview-head { min-height: 65px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.view-title { min-width: 0; display: flex; align-items: baseline; gap: 12px; }
+.view-title h2 { margin: 0; font-size: 17px; line-height: 1.1; font-weight: 800; letter-spacing: -.06em; white-space: nowrap; }
+#current-name { color: var(--muted); font: 11px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.segmented { display: inline-flex; align-items: center; padding: 2px; gap: 2px; background: #ecede7; border: 1px solid #e0e2d9; border-radius: 4px; flex: none; }
+.segmented button { border: 1px solid transparent; background: transparent; border-radius: 3px; padding: 5px 11px; color: var(--muted); white-space: nowrap; font-size: 12px; font-weight: 650; }
+.segmented button[aria-pressed=true] { color: var(--ink); background: #fff; border-color: #dcdfd4; box-shadow: 0 1px 2px #18221a10; }
+.stage { background: var(--stage); border-block: 1px solid #d9dcd2; padding: 25px; min-height: 405px; flex: 1; display: grid; place-items: center; overflow: hidden; }
+.paper { display: flex; align-items: center; justify-content: center; max-width: 100%; min-width: 0; box-shadow: 0 1px 2px #21271a29, 0 12px 40px -14px #272d236b; background: #e9e7e3; }
+#preview { display: block; max-width: 100%; max-height: clamp(320px, calc(100dvh - 385px), 690px); width: auto; height: auto; object-fit: contain; }
+.paper.mask-mode #preview { touch-action: none; cursor: crosshair; }
+.empty { padding: 20px; text-align: center; color: var(--muted); }
+.empty > svg { width: 35px; height: 35px; }
+.empty h3 { margin: 8px 0 3px; font-size: 17px; color: var(--ink); }
+.empty p { margin: 0; font-size: 12px; }
+.preview-foot { padding: 0 14px; min-height: 34px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font: 11px var(--mono); }
+.preview-foot > span:first-child { display: flex; align-items: center; gap: 6px; font: 11px var(--font); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #57713b; }
+.dot.wait { background: #a67b43; }
+.mask-tools { min-height: 41px; padding: 5px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line); }
+.brush-size { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.brush-size input { width: 70px; }
+.notice { background: #f8f0d6; color: #61501f; padding: 8px 13px; font-size: 12px; }
+.queue { padding: 10px 12px 12px; }
+.queue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.queue-head h2 { margin: 0; font-size: 12px; }
+#queue-count { color: var(--muted); margin-left: 5px; font: 11px var(--mono); }
+.queue-content, .items { display: flex; align-items: stretch; gap: 7px; min-width: 0; }
+.items { overflow-x: auto; }
+.drop { flex: none; width: 90px; min-height: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 3px; border: 1px dashed #a9afa1; background: #f1f3e9; color: #4d5743; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.drop > svg { width: 15px; height: 15px; }
+.drop:hover, .dragover .drop { border-color: #56673c; background: #eaf2cd; }
+.dragover .stage { box-shadow: inset 0 0 0 2px #728748; }
+.item { flex: 0 0 154px; max-width: 154px; min-height: 52px; padding: 4px; display: flex; align-items: center; gap: 2px; background: #f2f3ed; border: 1px solid #dbded3; border-radius: 4px; }
+.item.selected { background: #eef4d9; border-color: #99a770; }
+.item-pick { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; text-align: left; }
+.item-image { width: 42px; height: 40px; flex: none; object-fit: cover; border-radius: 2px; background: #e0e1d8; display: grid; place-items: center; }
+.item-title, .item-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-title { font-size: 11px; font-weight: 730; }
+.item-meta { margin-top: 3px; color: var(--muted); font: 10px var(--mono); }
+.item-remove { padding: 4px; border: 0; background: transparent; color: var(--muted); border-radius: 3px; }
+.item-remove svg { width: 13px; height: 13px; }
+.item-remove:hover { background: #e4e8d9; color: #22251d; }
+.settings { display: flex; flex-direction: column; }
+.editor-head, .editor-tabs { padding-inline: 15px; display: flex; align-items: center; }
+.editor-head { min-height: 49px; justify-content: space-between; }
+.editor-head h2 { font-size: 16px; margin: 0; letter-spacing: -.04em; }
+.text-btn { border: 0; background: transparent; color: var(--muted); border-radius: 3px; padding: 4px 5px; white-space: nowrap; font-size: 11px; font-weight: 650; display: inline-flex; align-items: center; gap: 4px; }
+.text-btn svg { width: 13px; height: 13px; }
+.text-btn:hover:not(:disabled) { color: var(--ink); background: #e9ece0; }
+.editor-tabs { gap: 19px; border-bottom: 1px solid var(--line); }
+.editor-tabs button { padding: 6px 3px 9px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 13px; font-weight: 650; }
+.editor-tabs button[aria-selected=true] { color: var(--ink); border-color: #464d33; }
+.settings-content { flex: 1; }
+.setting-section { margin: 0 15px; padding: 14px 0; border-bottom: 1px solid #e1e3db; }
+.setting-section:last-child { border-bottom: 0; }
+.setting-section h3, .export-area h3 { margin: 0 0 8px; font-size: 12px; font-weight: 750; }
+.option-grid { display: grid; gap: 4px; }
+.option-grid button { min-height: 33px; border: 1px solid var(--line); border-radius: 4px; background: #f1f2eb; white-space: nowrap; font-size: 11px; padding: 4px 5px; display: flex; justify-content: center; align-items: center; gap: 5px; }
+.option-grid button:hover:not(:disabled) { border-color: #9ca58b; }
+.option-grid button[aria-pressed=true] { background: #e9f0d3; border-color: #abb986; color: #313b22; font-weight: 730; }
+.orientation-grid { grid-template-columns: 1.15fr 1fr .6fr; }
+.ratio-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.light-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.field-note { font-size: 11px; line-height: 1.45; color: var(--muted); margin: 7px 0 0; }
+.turn-row { margin-top: 10px; display: flex; align-items: center; gap: 5px; }
+.turn-row > span { margin-right: 4px; color: var(--muted); font-size: 11px; }
+.turn-row output { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+.icon-button { width: 32px; height: 30px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); background: transparent; border-radius: 4px; }
+.icon-button:hover:not(:disabled) { background: #e7ebdc; }
+.icon-button svg { width: 16px; height: 16px; }
+.ratio { width: 11px; height: 11px; border: 1px solid currentColor; display: inline-block; border-radius: 1px; }
+.ratio.portrait { width: 9px; height: 12px; }
+.ratio.landscape { width: 13px; height: 9px; }
+.ratio.story { width: 7px; height: 12px; }
+.slider { display: block; margin-top: 10px; }
+.slider > span { display: flex; justify-content: space-between; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
+.slider output { color: #454b3b; font: 11px var(--mono); }
+input[type=range] { accent-color: #616d47; cursor: pointer; margin: 5px 0 0; height: 14px; }
+.slider input { width: 100%; display: block; }
+select { display: block; width: 100%; min-height: 33px; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line); background: #f0f1e9; color: var(--ink); font-size: 12px; }
+.field { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.field select { max-width: 132px; }
+details { margin-top: 9px; }
+summary { display: flex; justify-content: space-between; gap: 5px; align-items: center; color: var(--muted); font-size: 11px; cursor: pointer; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary svg { width: 13px; height: 13px; }
+details[open] summary svg { transform: rotate(180deg); }
+#edit-mask { margin-top: 12px; }
+.swatches { display: flex; gap: 6px; }
+.swatches button, .custom-chip { position: relative; display: grid; place-items: center; flex: 1 1 0; height: 29px; padding: 0; min-width: 0; border: 1px solid #c8ccbe; border-radius: 4px; background: var(--chip); }
+.swatches button[aria-pressed=true] { outline: 1px solid #4f5e36; outline-offset: 2px; }
+.custom-chip { background: #eff1e7; }
+.custom-chip svg { width: 14px; height: 14px; }
+.custom-chip input { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; opacity: 0; }
+.custom-chip:focus-within { outline: 2px solid #626e47; outline-offset: 2px; }
+.checker { background-color: #fdfdf9 !important; background-image: repeating-conic-gradient(#dde0d7 0% 25%, transparent 0% 50%) !important; background-size: 13px 13px !important; }
+.background-label { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 11px; margin-top: 8px; }
+.background-label span:last-child { font-family: var(--mono); }
+.light-icon { width: 12px; height: 12px; display: inline-block; border: 1px solid currentColor; border-radius: 50%; }
+.light-icon.soft { background: linear-gradient(140deg, #eef1e5, #809067); }
+.light-icon.side { background: linear-gradient(105deg, transparent 50%, currentColor 50%); }
+.export-area { margin-top: auto; padding: 13px 15px 15px; border-top: 1px solid var(--line); background: #f4f5ee; }
+.export-fields { margin-bottom: 7px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 6px; }
+.download { width: 100%; min-height: 37px; }
+.download + .download { margin-top: 5px; }
+.toast { position: fixed; z-index: 5; bottom: 18px; left: 50%; transform: translateX(-50%); margin: 0; padding: 9px 13px; background: #262b20; color: #fff; border-radius: 4px; box-shadow: 0 4px 14px #12171036; font-size: 12px; width: max-content; max-width: calc(100vw - 24px); }
+@media (max-width: 980px) {
+  .site-head { padding-inline: 17px; }
+  main { padding: 16px 17px 24px; }
+  .workspace { grid-template-columns: minmax(0, 1fr) 278px; gap: 11px; }
+  .view-title { flex-direction: column; gap: 4px; }
+}
+@media (max-width: 690px) {
+  .site-head { height: 57px; padding-inline: 12px; }
+  .app-title { font-size: 17px; }
+  .head-actions { gap: 10px; }
+  .local span { display: none; }
+  .button { min-height: 37px; padding-inline: 10px; font-size: 12px; }
+  main { padding: 10px 10px 20px; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .left-column { gap: 8px; }
+  .preview-head { padding: 7px 10px; min-height: 54px; }
+  .view-title h2 { font-size: 15px; }
+  .view-title #current-name { font-size: 10px; }
+  .segmented button { padding-inline: 7px; font-size: 11px; }
+  .stage { padding: 13px; min-height: 215px; }
+  #preview { max-height: 50vh; }
+  .queue { padding: 6px 9px 8px; }
+  .queue-head { margin-bottom: 4px; }
+  .editor-head { min-height: 42px; }
+  .setting-section { padding-block: 11px; }
+}
 </style>
 </head>
 <body>
 <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
-<symbol id="i-logo" viewBox="0 0 24 24"><path d="M3 4h14v16H3zM6 4v16M19 6h2v16H6"/><path d="M10 10h4m-4 3h4"/></symbol>
-<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></symbol>
 <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></symbol>
 <symbol id="i-stack" viewBox="0 0 24 24"><path d="M8 3h12v13H8zM4 7v13h12M11 7h6m-6 4h4"/></symbol>
-<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v12H3z"/></symbol>
 <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 4.5 3.1 7.5 8 10 4.9-2.5 8-5.5 8-10V6z"/><path d="m8.5 12 2.2 2.2 4.8-4.8"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
 <symbol id="i-image" viewBox="0 0 24 24"><path d="M3 4h18v16H3zM3 16l5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1"/></symbol>
-<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2m0-14-2 2M7 17l-2 2"/></symbol>
-<symbol id="i-frame" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></symbol>
-<symbol id="i-color" viewBox="0 0 24 24"><circle cx="9" cy="10" r="5"/><circle cx="15" cy="14" r="5"/></symbol>
 <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
 <symbol id="i-reset" viewBox="0 0 24 24"><path d="M5 10a7 7 0 1 1 1.1 6.4M5 4v6h6"/></symbol>
-<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-turn-left" viewBox="0 0 24 24"><path d="M9 4 4 9l5 5M4 9h9a6 6 0 0 1 6 6v4"/></symbol>
+<symbol id="i-turn-right" viewBox="0 0 24 24"><path d="m15 4 5 5-5 5m5-5h-9a6 6 0 0 0-6 6v4"/></symbol>
 </defs></svg>
-
 <header class="site-head">
-  <div class="brand"><span class="brand-mark"><svg><use href="#i-logo"/></svg></span><span>册光 <small>FOLIO STUDIO</small></span></div>
-  <div class="local"><svg><use href="#i-shield"/></svg><span>图片仅在本机处理</span></div>
+  <h1 class="app-title">书籍产品图</h1>
+  <div class="head-actions">
+    <div class="local"><svg aria-hidden="true"><use href="#i-shield"/></svg><span>照片仅在本机处理</span></div>
+    <button class="button primary" id="add"><svg aria-hidden="true"><use href="#i-plus"/></svg> 导入照片</button>
+  </div>
+  <input type="file" id="files" accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" multiple hidden>
 </header>
-
 <main>
-  <section class="intro">
-    <div><h1>书籍产品图<span>.</span></h1><p>把随手拍的书照整理成同一套产品图。</p></div>
-    <button class="button primary" id="add"><svg><use href="#i-upload"/></svg> 添加图片</button>
-    <input type="file" id="files" accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" multiple hidden>
-  </section>
-
   <div class="workspace">
-    <aside class="queue panel" aria-labelledby="queue-head">
-      <header class="panel-head"><h2 id="queue-head"><svg><use href="#i-stack"/></svg> 图片队列</h2><span id="queue-count" class="pill"></span></header>
-      <div class="queue-content">
-        <div id="items" class="items"></div>
-        <button id="drop" class="drop">
-          <span class="drop-icon"><svg><use href="#i-plus"/></svg></span>
-          <strong>拖拽图片到这里</strong>
-          <small>或点击选择，可一次添加多张</small>
-        </button>
-        <button id="demo" class="text-btn demo-btn">试用示例图 <svg><use href="#i-arrow"/></svg></button>
-      </div>
-      <div class="queue-foot"><svg><use href="#i-folder"/></svg><span>支持浏览器可读的 JPG、PNG、WebP 等格式</span></div>
-    </aside>
-
-    <section class="preview panel" aria-label="图像预览">
-      <header class="panel-head preview-head">
-        <h2><svg><use href="#i-image"/></svg> 预览</h2>
-        <div class="segmented" aria-label="预览模式">
-          <button type="button" data-view="result" aria-pressed="true">成片</button>
-          <button type="button" data-view="source" aria-pressed="false">原图</button>
-          <button type="button" data-view="mask" aria-pressed="false">修抠图</button>
+    <div class="left-column">
+      <section class="preview" aria-label="图像预览">
+        <header class="preview-head">
+          <div class="view-title"><h2>预览</h2><span id="current-name"></span></div>
+          <div class="segmented view-toggle" aria-label="预览模式">
+            <button type="button" data-view="source" aria-pressed="false">原图</button>
+            <button type="button" data-view="result" aria-pressed="true">成片</button>
+            <button type="button" data-view="mask" aria-pressed="false">修抠图</button>
+          </div>
+        </header>
+        <div id="mask-tools" class="mask-tools" hidden>
+          <div class="segmented" aria-label="抠图工具">
+            <button data-brush="sample" aria-pressed="false">取背景色</button>
+            <button data-brush="keep" aria-pressed="true">保留</button>
+            <button data-brush="erase" aria-pressed="false">擦除</button>
+          </div>
+          <label class="brush-size">笔刷 <input id="brush-size" aria-label="笔刷大小" type="range" min="3" max="60" value="18"></label>
+          <button id="undo" class="text-btn" disabled>撤销</button>
+          <button id="reset-mask" class="text-btn">还原</button>
         </div>
-      </header>
-      <div id="mask-tools" class="mask-tools" hidden>
-        <div class="segmented" aria-label="抠图工具">
-          <button data-brush="sample" aria-pressed="false">取背景色</button>
-          <button data-brush="keep" aria-pressed="true">保留</button>
-          <button data-brush="erase" aria-pressed="false">擦除</button>
+        <div id="stage" class="stage">
+          <div id="empty" class="empty" hidden><svg aria-hidden="true"><use href="#i-image"/></svg><h3 id="empty-title">添加图片开始</h3><p id="empty-body">支持拖入原始书照，或先试用示例图。</p></div>
+          <div id="paper" class="paper" hidden><canvas id="preview" aria-label="当前书籍照片预览"></canvas></div>
         </div>
-        <label class="brush-size">笔刷 <input id="brush-size" aria-label="笔刷大小" type="range" min="3" max="60" value="18"></label>
-        <button id="undo" class="text-btn" disabled>撤销</button>
-        <button id="reset-mask" class="text-btn">还原</button>
+        <footer class="preview-foot"><span><i class="dot" id="preview-dot"></i><span id="preview-status" aria-live="polite">等待图片</span></span><span id="preview-size"></span></footer>
+        <div id="notice" class="notice" role="status" hidden></div>
+      </section>
+      <section class="queue" aria-labelledby="queue-head">
+        <header class="queue-head"><h2 id="queue-head">照片队列 <span id="queue-count"></span></h2><button id="demo" class="text-btn demo-btn">示例图</button></header>
+        <div class="queue-content">
+          <button id="drop" class="drop" title="可拖入多张照片"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>添加或拖入</span></button>
+          <div id="items" class="items"></div>
+        </div>
+      </section>
+    </div>
+    <aside class="settings" aria-label="编辑和导出">
+      <div class="editor-head">
+        <h2>编辑</h2><button id="reset" class="text-btn" title="恢复默认样式"><svg aria-hidden="true"><use href="#i-reset"/></svg> 重置</button>
       </div>
-      <div id="stage" class="stage">
-        <div id="empty" class="empty" hidden><svg><use href="#i-image"/></svg><h3 id="empty-title">添加图片开始</h3><p id="empty-body">支持拖入原始书照，或先试用示例图。</p></div>
-        <div id="paper" class="paper" hidden><canvas id="preview" aria-label="当前书籍照片预览"></canvas></div>
+      <div class="editor-tabs" role="tablist" aria-label="编辑设置">
+        <button type="button" role="tab" id="tab-compose" aria-controls="panel-compose" aria-selected="true" data-tab="compose">构图</button>
+        <button type="button" role="tab" id="tab-light" aria-controls="panel-light" aria-selected="false" data-tab="light" tabindex="-1">光影</button>
+        <button type="button" role="tab" id="tab-cut" aria-controls="panel-cut" aria-selected="false" data-tab="cut" tabindex="-1">抠图</button>
       </div>
-      <div id="notice" class="notice" role="status" hidden></div>
-      <footer class="preview-foot"><span><i class="dot" id="preview-dot"></i><span id="preview-status" aria-live="polite">等待图片</span></span><span id="preview-size"></span></footer>
-    </section>
-
-    <aside class="settings panel" aria-labelledby="settings-head">
-      <header class="panel-head"><h2 id="settings-head">样式设置</h2><button id="reset" class="text-btn" title="恢复默认样式"><svg><use href="#i-reset"/></svg> 重置</button></header>
       <div class="settings-content">
-        <section class="setting-section">
-          <h3><svg><use href="#i-color"/></svg> 背景</h3>
-          <div class="swatches" aria-label="背景配色">
-            <button title="雾灰" aria-label="雾灰" data-background="#e9e7e3" style="--chip:#e9e7e3"></button>
-            <button title="暖白" aria-label="暖白" data-background="#f5f0e7" style="--chip:#f5f0e7"></button>
-            <button title="浅粉" aria-label="浅粉" data-background="#e6c4c2" style="--chip:#e6c4c2"></button>
-            <button title="淡苔绿" aria-label="淡苔绿" data-background="#cbd1c2" style="--chip:#cbd1c2"></button>
-            <button title="炭黑" aria-label="炭黑" data-background="#292725" style="--chip:#292725"></button>
-            <button title="透明" aria-label="透明" data-background="transparent" class="checker"></button>
-            <label class="custom-chip" title="自定义背景色"><svg><use href="#i-plus"/></svg><input id="custom-bg" aria-label="自定义背景色" type="color" value="#e9e7e3"></label>
-          </div>
-          <div class="background-label"><span id="bg-name">雾灰</span><span id="bg-value">#E9E7E3</span></div>
-        </section>
-        <section class="setting-section">
-          <h3><svg><use href="#i-sun"/></svg> 灯光与阴影</h3>
-          <div class="light-grid" aria-label="灯光预设">
-            <button data-light="soft" aria-pressed="true"><i class="light-icon soft"></i> 柔光</button>
-            <button data-light="side" aria-pressed="false"><i class="light-icon side"></i> 侧光</button>
-            <button data-light="flat" aria-pressed="false"><i class="light-icon flat"></i> 无阴影</button>
-          </div>
-          <label class="slider"><span>阴影浓度 <output data-out="shadow"></output></span><input type="range" min="0" max="90" data-setting="shadow"></label>
-          <label class="slider"><span>阴影柔度 <output data-out="softness"></output></span><input type="range" min="0" max="100" data-setting="softness"></label>
-          <details><summary>更多灯光设置 <svg><use href="#i-chevron"/></svg></summary>
+        <div class="settings-page" id="panel-compose" role="tabpanel" aria-labelledby="tab-compose" data-panel="compose">
+          <section class="setting-section">
+            <h3>书本校正</h3>
+            <div class="option-grid orientation-grid" role="group" aria-label="自动扶正模式">
+              <button type="button" data-orientation="auto" aria-pressed="true">自动扶正</button>
+              <button type="button" data-orientation="outline" aria-pressed="false">仅透视</button>
+              <button type="button" data-orientation="off" aria-pressed="false">关</button>
+            </div>
+            <p class="field-note" id="orientation-note">根据书边和可辨认的文字方向校正。</p>
+            <div class="turn-row" role="group" aria-label="旋转当前照片">
+              <span>当前照片</span>
+              <button type="button" id="turn-left" class="icon-button" aria-label="向左旋转 90 度" title="向左旋转 90 度"><svg aria-hidden="true"><use href="#i-turn-left"/></svg></button>
+              <button type="button" id="turn-right" class="icon-button" aria-label="向右旋转 90 度" title="向右旋转 90 度"><svg aria-hidden="true"><use href="#i-turn-right"/></svg></button>
+              <output id="turn-value"></output>
+            </div>
+            <details><summary>微调角度 <svg aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+              <label class="slider"><span>当前照片 <output id="angle-value"></output></span><input id="angle" type="range" min="-30" max="30" step="0.5" value="0"></label>
+            </details>
+          </section>
+          <section class="setting-section">
+            <h3>画幅</h3>
+            <div class="option-grid ratio-grid" role="group" aria-label="成片画幅">
+              <button data-ratio="square"><i class="ratio square"></i>1:1</button>
+              <button data-ratio="portrait"><i class="ratio portrait"></i>4:5</button>
+              <button data-ratio="landscape"><i class="ratio landscape"></i>4:3</button>
+              <button data-ratio="story"><i class="ratio story"></i>9:16</button>
+            </div>
+            <label class="slider"><span>留白 <output data-out="margin"></output></span><input type="range" min="5" max="36" data-setting="margin"></label>
+          </section>
+          <section class="setting-section">
+            <h3>多本排版</h3>
+            <select data-setting="layout" aria-label="多本排版"><option value="original">随原图方向</option><option value="row">横向并排</option><option value="stack">纵向排列</option></select>
+            <label class="slider"><span>书本间距 <output data-out="gap"></output></span><input type="range" min="2" max="22" data-setting="gap"></label>
+          </section>
+        </div>
+        <div class="settings-page" id="panel-light" role="tabpanel" aria-labelledby="tab-light" data-panel="light" hidden>
+          <section class="setting-section">
+            <h3>背景</h3>
+            <div class="swatches" aria-label="背景配色">
+              <button title="雾灰" aria-label="雾灰" data-background="#e9e7e3" style="--chip:#e9e7e3"></button>
+              <button title="暖白" aria-label="暖白" data-background="#f5f0e7" style="--chip:#f5f0e7"></button>
+              <button title="浅粉" aria-label="浅粉" data-background="#e6c4c2" style="--chip:#e6c4c2"></button>
+              <button title="淡苔绿" aria-label="淡苔绿" data-background="#cbd1c2" style="--chip:#cbd1c2"></button>
+              <button title="炭黑" aria-label="炭黑" data-background="#292725" style="--chip:#292725"></button>
+              <button title="透明" aria-label="透明" data-background="transparent" class="checker"></button>
+              <label class="custom-chip" title="自定义背景色"><svg aria-hidden="true"><use href="#i-plus"/></svg><input id="custom-bg" aria-label="自定义背景色" type="color" value="#e9e7e3"></label>
+            </div>
+            <div class="background-label"><span id="bg-name">雾灰</span><span id="bg-value">#E9E7E3</span></div>
+          </section>
+          <section class="setting-section">
+            <h3>灯光与阴影</h3>
+            <div class="option-grid light-grid" aria-label="灯光预设">
+              <button data-light="soft" aria-pressed="true"><i class="light-icon soft"></i> 柔光</button>
+              <button data-light="side" aria-pressed="false"><i class="light-icon side"></i> 侧光</button>
+              <button data-light="flat" aria-pressed="false"><i class="light-icon flat"></i> 无阴影</button>
+            </div>
+            <label class="slider"><span>阴影浓度 <output data-out="shadow"></output></span><input type="range" min="0" max="90" data-setting="shadow"></label>
+            <label class="slider"><span>阴影柔度 <output data-out="softness"></output></span><input type="range" min="0" max="100" data-setting="softness"></label>
             <label class="field"><span>投影方向</span><select data-setting="direction"><option value="se">右下</option><option value="sw">左下</option><option value="s">正下</option><option value="e">向右</option><option value="w">向左</option></select></label>
             <label class="slider"><span>书面亮度 <output data-out="exposure"></output></span><input type="range" min="-18" max="18" data-setting="exposure"></label>
-          </details>
-        </section>
-        <section class="setting-section">
-          <h3><svg><use href="#i-frame"/></svg> 构图</h3>
-          <div class="ratio-grid" id="ratio-group" role="group" aria-label="成片画幅">
-            <button data-ratio="square"><i class="ratio square"></i>1:1</button>
-            <button data-ratio="portrait"><i class="ratio portrait"></i>4:5</button>
-            <button data-ratio="landscape"><i class="ratio landscape"></i>4:3</button>
-            <button data-ratio="story"><i class="ratio story"></i>9:16</button>
-          </div>
-          <label class="slider"><span>画面留白 <output data-out="margin"></output></span><input type="range" min="5" max="36" data-setting="margin"></label>
-          <details><summary>排版与扶正 <svg><use href="#i-chevron"/></svg></summary>
-            <label class="field"><span>多册排布</span><select data-setting="layout"><option value="original">保持原始关系</option><option value="row">横向并排</option><option value="stack">纵向排列</option></select></label>
-            <label class="slider"><span>多册间距 <output data-out="gap"></output></span><input type="range" min="2" max="22" data-setting="gap"></label>
-            <label class="slider"><span>当前图旋转 <output id="angle-value"></output></span><input id="angle" type="range" min="-30" max="30" step="0.5" value="0"></label>
-          </details>
-        </section>
-        <section class="setting-section cut-settings">
-          <details><summary><span>自动抠图</span><svg><use href="#i-chevron"/></svg></summary>
+          </section>
+        </div>
+        <div class="settings-page" id="panel-cut" role="tabpanel" aria-labelledby="tab-cut" data-panel="cut" hidden>
+          <section class="setting-section">
+            <h3>轮廓</h3>
             <label class="slider"><span>背景容差 <output data-out="tolerance"></output></span><input type="range" min="4" max="116" data-setting="tolerance"></label>
             <label class="slider"><span>边缘收紧 <output data-out="edge"></output></span><input type="range" min="0" max="100" data-setting="edge"></label>
-            <p class="field-note">容差会应用到整批。难抠的单张可在「修抠图」里取色和涂改。</p>
-          </details>
-        </section>
+            <p class="field-note">容差适用于整批。单张的边缘可在画面上取色或涂改。</p>
+            <button type="button" id="edit-mask" class="button secondary">检查抠图</button>
+          </section>
+        </div>
       </div>
       <section class="export-area">
         <h3>导出</h3>
@@ -270,14 +331,382 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
           <label><span class="sr-only">输出尺寸</span><select data-setting="size"><option value="1080">长边 1080 px</option><option value="1600">长边 1600 px</option><option value="2400">长边 2400 px</option><option value="3200">长边 3200 px</option></select></label>
           <label><span class="sr-only">图片格式</span><select data-setting="format"><option value="png">PNG</option><option value="jpeg">JPG</option></select></label>
         </div>
-        <button id="download" class="button primary download"><svg><use href="#i-down"/></svg> 下载当前图</button>
-        <button id="download-all" class="button secondary download"><svg><use href="#i-stack"/></svg> 批量下载 ZIP</button>
+        <button id="download" class="button primary download"><svg aria-hidden="true"><use href="#i-down"/></svg> 下载当前图</button>
+        <button id="download-all" class="button secondary download"><svg aria-hidden="true"><use href="#i-stack"/></svg> 批量下载 ZIP</button>
       </section>
     </aside>
   </div>
   <p id="message" class="toast" role="status" hidden></p>
 </main>
+<script>const BookGeometry = (() => {
+  const modulo = n => (n % 4 + 4) % 4;
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const cross = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 
+  function hullOf(points) {
+    points.sort((a, b) => a.x - b.x || a.y - b.y);
+    const half = items => {
+      const hull = [];
+      for (const point of items) {
+        while (hull.length > 1 && cross(hull.at(-2), hull.at(-1), point) <= 0) hull.pop();
+        hull.push(point);
+      }
+      return hull.slice(0, -1);
+    };
+    return half(points).concat(half(points.reverse()));
+  }
+
+  function contour(labels, width, region) {
+    const { x, y, w, h, id } = region;
+    const edge = [];
+    for (let row = y; row < y + h; row++) {
+      let left = x, right = x + w - 1;
+      while (left <= right && labels[row * width + left] !== id) left++;
+      if (left > right) continue;
+      while (labels[row * width + right] !== id) right--;
+      edge.push({ x: left + .5, y: row + .5 }, { x: right + .5, y: row + .5 });
+    }
+    for (let col = x; col < x + w; col++) {
+      let top = y, bottom = y + h - 1;
+      while (top <= bottom && labels[top * width + col] !== id) top++;
+      if (top > bottom) continue;
+      while (labels[bottom * width + col] !== id) bottom--;
+      edge.push({ x: col + .5, y: top + .5 }, { x: col + .5, y: bottom + .5 });
+    }
+    return edge;
+  }
+
+  function quadOf(hull) {
+    const corners = hull.slice();
+    while (corners.length > 4) {
+      let quietest = Infinity, remove = 0;
+      for (let i = 0; i < corners.length; i++) {
+        const bend = Math.abs(cross(corners.at(i - 1), corners[i], corners[(i + 1) % corners.length]));
+        if (bend < quietest) {
+          quietest = bend;
+          remove = i;
+        }
+      }
+      corners.splice(remove, 1);
+    }
+    let horizontal = -Infinity, start = 0;
+    for (let i = 0; i < 4; i++) {
+      const a = corners[i], b = corners[(i + 1) % 4];
+      const rightward = (b.x - a.x) / distance(a, b);
+      if (rightward > horizontal) {
+        horizontal = rightward;
+        start = i;
+      }
+    }
+    return corners.slice(start).concat(corners.slice(0, start));
+  }
+
+  function fitEdge(points, a, b, limit) {
+    const length = distance(a, b);
+    const ux = (b.x - a.x) / length, uy = (b.y - a.y) / length;
+    const bins = Array.from({ length: 12 }, () => []);
+    for (const point of points) {
+      const dx = point.x - a.x, dy = point.y - a.y;
+      const along = (ux * dx + uy * dy) / length;
+      const across = ux * dy - uy * dx;
+      if (along < .12 || along >= .88 || Math.abs(across) > limit) continue;
+      bins[Math.floor(along * bins.length)].push({ along, across });
+    }
+    const med = values => values.sort((x, y) => x - y)[values.length >> 1];
+    const anchors = bins.filter(bin => bin.length >= 3).map(bin => ({
+      t: med(bin.map(point => point.along)), d: med(bin.map(point => point.across))
+    }));
+    const slopes = [];
+    for (let i = 0; i < anchors.length; i++) {
+      for (let j = i + 1; j < anchors.length; j++) {
+        const delta = anchors[j].t - anchors[i].t;
+        if (delta > .24) slopes.push((anchors[j].d - anchors[i].d) / delta);
+      }
+    }
+    if (!slopes.length) return [a, b];
+    const slope = med(slopes);
+    const offset = med(anchors.map(anchor => anchor.d - slope * anchor.t));
+    return [
+      { x: a.x - uy * offset, y: a.y + ux * offset },
+      { x: b.x - uy * (offset + slope), y: b.y + ux * (offset + slope) }
+    ];
+  }
+
+  function refineCorners(points, corners, limit) {
+    const edges = corners.map((a, i) => fitEdge(points, a, corners[(i + 1) % 4], limit));
+    const result = corners.map((corner, i) => {
+      const [a, b] = edges.at(i - 1), [c, d] = edges[i];
+      const ux = b.x - a.x, uy = b.y - a.y, vx = d.x - c.x, vy = d.y - c.y;
+      const determinant = ux * vy - uy * vx;
+      if (Math.abs(determinant) < 1) return corner;
+      const t = ((c.x - a.x) * vy - (c.y - a.y) * vx) / determinant;
+      return { x: a.x + t * ux, y: a.y + t * uy };
+    });
+    return result.some((point, i) => distance(point, corners[i]) > limit * 1.7) ? corners : result;
+  }
+
+  function projective(corners) {
+    const [a, b, c, d] = corners;
+    const sx = a.x - b.x + c.x - d.x, sy = a.y - b.y + c.y - d.y;
+    const ux = b.x - c.x, uy = b.y - c.y;
+    const vx = d.x - c.x, vy = d.y - c.y;
+    const divisor = ux * vy - vx * uy;
+    if (Math.abs(divisor) < 1) return null;
+    const g = (sx * vy - vx * sy) / divisor;
+    const h = (ux * sy - sx * uy) / divisor;
+    if (Math.abs(g) > .54 || Math.abs(h) > .54 || 1 + g + h < .45) return null;
+    return {
+      a: b.x - a.x + g * b.x, b: d.x - a.x + h * d.x, c: a.x,
+      d: b.y - a.y + g * b.y, e: d.y - a.y + h * d.y, f: a.y, g, h
+    };
+  }
+
+  function sourceAt(m, u, v) {
+    const depth = m.g * u + m.h * v + 1;
+    return { x: (m.a * u + m.b * v + m.c) / depth, y: (m.d * u + m.e * v + m.f) / depth };
+  }
+
+  function targetAt(m, x, y) {
+    const a = m.a - x * m.g, b = m.b - x * m.h, d = m.d - y * m.g, e = m.e - y * m.h;
+    const c = x - m.c, f = y - m.f, det = a * e - b * d;
+    return { x: (c * e - b * f) / det, y: (a * f - d * c) / det };
+  }
+
+  function fit(prepared, mask, region) {
+    if (region.w < 25 || region.h < 25 || region.x < 2 || region.y < 2 ||
+        region.x + region.w > prepared.width - 2 || region.y + region.h > prepared.height - 2) return null;
+    const points = contour(mask.labels, prepared.width, region);
+    const hull = hullOf(points);
+    if (hull.length < 4) return null;
+    const corners = refineCorners(points, quadOf(hull), Math.max(4, Math.min(region.w, region.h) * .025));
+    const lengths = corners.map((point, i) => distance(point, corners[(i + 1) % 4]));
+    const w = (lengths[0] + lengths[2]) / 2, h = (lengths[1] + lengths[3]) / 2;
+    const area = Math.abs(cross(corners[0], corners[1], corners[2]) + cross(corners[0], corners[2], corners[3])) / 2;
+    if (area < region.area * .91 || area > region.area * 1.12 ||
+        Math.max(lengths[0], lengths[2]) > 1.45 * Math.min(lengths[0], lengths[2]) ||
+        Math.max(lengths[1], lengths[3]) > 1.45 * Math.min(lengths[1], lengths[3])) return null;
+    for (let i = 0; i < 4; i++) {
+      const sine = Math.abs(cross(corners[i], corners[(i + 1) % 4], corners[(i + 2) % 4])) / (lengths[i] * lengths[(i + 1) % 4]);
+      if (sine < .79) return null;
+    }
+    const matrix = projective(corners);
+    if (!matrix) return null;
+    const rim = hull.map(p => targetAt(matrix, p.x, p.y));
+    const u0 = Math.min(0, ...rim.map(p => p.x)) - 1 / w;
+    const v0 = Math.min(0, ...rim.map(p => p.y)) - 1 / h;
+    const u1 = Math.max(1, ...rim.map(p => p.x)) + 1 / w;
+    const v1 = Math.max(1, ...rim.map(p => p.y)) + 1 / h;
+    if (u0 < -.09 || v0 < -.09 || u1 > 1.09 || v1 > 1.09) return null;
+    return { matrix, u0, v0, u1, v1, w: (u1 - u0) * w, h: (v1 - v0) * h, width: w, height: h };
+  }
+
+  function rectifiedGray(prepared, geometry) {
+    const { matrix, width, height } = geometry;
+    const scale = Math.min(1.2, 760 / Math.max(width, height));
+    const w = Math.ceil(width * scale), h = Math.ceil(height * scale);
+    const gray = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const p = sourceAt(matrix, (x + .5) / w, (y + .5) / h);
+        const idx = (Math.floor(p.y) * prepared.width + Math.floor(p.x)) * 4;
+        const rgb = prepared.pixels;
+        gray[y * w + x] = .299 * rgb[idx] + .587 * rgb[idx + 1] + .114 * rgb[idx + 2];
+      }
+    }
+    return { w, h, gray };
+  }
+
+  function textComponents({ w, h, gray }) {
+    const stride = w + 1, integral = new Uint32Array(stride * (h + 1));
+    for (let y = 0; y < h; y++) {
+      let row = 0;
+      for (let x = 0; x < w; x++) {
+        row += gray[y * w + x];
+        integral[(y + 1) * stride + x + 1] = integral[y * stride + x + 1] + row;
+      }
+    }
+    const active = new Uint8Array(w * h);
+    const margin = Math.max(3, Math.floor(Math.min(w, h) * .022));
+    const window = Math.max(7, Math.round(Math.min(w, h) * .032));
+    for (let y = margin; y < h - margin; y++) {
+      const top = Math.max(0, y - window), bottom = Math.min(h, y + window + 1);
+      for (let x = margin; x < w - margin; x++) {
+        const left = Math.max(0, x - window), right = Math.min(w, x + window + 1);
+        const mean = (integral[bottom * stride + right] - integral[top * stride + right] -
+          integral[bottom * stride + left] + integral[top * stride + left]) / ((right - left) * (bottom - top));
+        if (gray[y * w + x] < mean - Math.max(14, mean * .19)) active[y * w + x] = 1;
+      }
+    }
+    const queue = new Int32Array(w * h), glyphs = [];
+    const longest = Math.min(w, h) * .103;
+    for (let idx = 0; idx < active.length; idx++) {
+      if (!active[idx]) continue;
+      let head = 0, tail = 1, x0 = w, y0 = h, x1 = 0, y1 = 0;
+      queue[0] = idx;
+      active[idx] = 0;
+      while (head < tail) {
+        const p = queue[head++], x = p % w, y = Math.floor(p / w);
+        x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+        for (let row = y - 1; row <= y + 1; row++) {
+          for (let col = x - 1; col <= x + 1; col++) {
+            const neighbor = row * w + col;
+            if (!active[neighbor]) continue;
+            active[neighbor] = 0;
+            queue[tail++] = neighbor;
+          }
+        }
+      }
+      const width = x1 - x0 + 1, height = y1 - y0 + 1;
+      if (tail >= 8 && Math.min(width, height) >= 2 && Math.max(width, height) <= longest &&
+          width < 4.5 * height && height < 4.5 * width && tail >= .15 * width * height) {
+        glyphs.push({ x: x0, y: y0, w: width, h: height, area: tail });
+      }
+    }
+    return glyphs;
+  }
+
+  function turnBox(p, w, h, q) {
+    if (q === 1) return { ...p, x: h - p.y - p.h, y: p.x, w: p.h, h: p.w };
+    if (q === 2) return { ...p, x: w - p.x - p.w, y: h - p.y - p.h };
+    if (q === 3) return { ...p, x: p.y, y: w - p.x - p.w, w: p.h, h: p.w };
+    return p;
+  }
+
+  function textRows(boxes, sample, quarter) {
+    const ordered = boxes.map(box => turnBox(box, sample.w, sample.h, quarter))
+      .filter(p => p.h >= 4 && p.w <= p.h * 2.6)
+      .sort((a, b) => a.x - b.x);
+    const paths = ordered.map(() => ({ length: 1, weight: 0, parent: -1 }));
+    for (let i = 0; i < ordered.length; i++) {
+      const a = ordered[i], bottom = a.y + a.h;
+      for (let j = i + 1; j < ordered.length; j++) {
+        const b = ordered[j], gap = b.x - (a.x + a.w);
+        if (gap > 1.75 * a.h + 2) break;
+        if (gap < -1 || b.h < .53 * a.h || b.h > 1.9 * a.h || Math.abs(bottom - b.y - b.h) > 1.4 + .22 * Math.min(a.h, b.h)) continue;
+        const path = paths[i], next = paths[j];
+        const weight = path.weight + 1 + .45 * Math.min(1, Math.abs(a.h - b.h) / Math.min(a.h, b.h) * 2.5);
+        if (weight <= next.weight) continue;
+        paths[j] = { length: path.length + 1, weight, parent: i };
+      }
+    }
+    const ends = paths.map((path, id) => ({ ...path, id })).filter(p => p.length >= 5).sort((a, b) => b.weight - a.weight);
+    const visited = new Set();
+    let score = 0, longest = 0, lines = 0;
+    for (const ending of ends) {
+      if (visited.has(ending.id)) continue;
+      const chain = [];
+      for (let i = ending.id; i >= 0 && !visited.has(i); i = paths[i].parent) chain.push(i);
+      if (chain.length < 5) continue;
+      for (const id of chain) visited.add(id);
+      longest = Math.max(longest, chain.length);
+      lines++;
+      score += Math.pow(chain.length, 1.26) * (ending.weight / ending.length);
+    }
+    return { score, longest, lines };
+  }
+
+  function logoDirection(sample) {
+    const { gray, w, h } = sample;
+    const count = new Uint32Array(256);
+    const padX = Math.round(w * .045), padY = Math.round(h * .045);
+    for (let y = padY; y < h - padY; y++) {
+      for (let x = padX; x < w - padX; x++) count[gray[y * w + x]]++;
+    }
+    const area = (w - padX * 2) * (h - padY * 2);
+    function percentile(ratio) {
+      let sum = 0;
+      for (let i = 0; i < count.length; i++) {
+        sum += count[i];
+        if (sum >= area * ratio) return i;
+      }
+      return 255;
+    }
+    const ink = percentile(.10), paper = percentile(.55);
+    if (paper - ink < 38) return null;
+    const threshold = ink + (paper - ink) * .30;
+    let sumX = 0, sumY = 0, squareX = 0, squareY = 0, n = 0;
+    for (let y = padY; y < h - padY; y++) {
+      for (let x = padX; x < w - padX; x++) {
+        if (gray[y * w + x] > threshold) continue;
+        sumX += x; sumY += y; squareX += x * x; squareY += y * y; n++;
+      }
+    }
+    if (n < area * .05 || n > area * .33) return null;
+    const spreadX = Math.sqrt(squareX / n - (sumX / n) ** 2);
+    const spreadY = Math.sqrt(squareY / n - (sumY / n) ** 2);
+    return spreadY > spreadX * 2.6 && spreadY > h * .19 && spreadX < w * .22 ? { threshold, y: sumY / n, x: sumX / n } : null;
+  }
+
+  function orientation(prepared, geometry) {
+    const sample = rectifiedGray(prepared, geometry);
+    const glyphs = textComponents(sample);
+    // Heavy illustration textures can produce thousands of components without reliable text.
+    const rows = glyphs.length < 2200 ? [0, 1, 2, 3].map(q => textRows(glyphs, sample, q)) : [];
+    const horizontal = Math.max(rows[0]?.score ?? 0, rows[2]?.score ?? 0);
+    const vertical = Math.max(rows[1]?.score ?? 0, rows[3]?.score ?? 0);
+    if (vertical >= 13 && vertical > horizontal * 1.38) {
+      const quarter = rows[3].score >= rows[1].score * .93 ? 3 : 1;
+      return { quarter, kind: 'text' };
+    }
+    if (horizontal >= 28 && rows[2].score > rows[0].score * 1.35 && rows[2].longest >= 7) {
+      return { quarter: 2, kind: 'text' };
+    }
+    if (horizontal >= 12) return { quarter: 0, kind: 'text' };
+    const mark = logoDirection(sample);
+    if (mark && geometry.height > geometry.width * 1.22 && mark.y < sample.h * .49) {
+      return { quarter: 3, kind: 'artwork' };
+    }
+    if (mark && geometry.height > geometry.width * 1.22 && mark.y > sample.h * .51) {
+      return { quarter: 1, kind: 'artwork' };
+    }
+    return { quarter: 0, kind: 'outline' };
+  }
+
+  function analyze(prepared, mask, region) {
+    const geometry = fit(prepared, mask, region);
+    if (!geometry) return null;
+    return { ...geometry, ...orientation(prepared, geometry) };
+  }
+
+  function rectifiedCut(input, region, shape, scale, createCanvas) {
+    const output = createCanvas(Math.max(1, Math.round(shape.w * scale)), Math.max(1, Math.round(shape.h * scale)));
+    const { width, height } = output, matrix = shape.matrix;
+    const src = input.getContext('2d').getImageData(0, 0, input.width, input.height).data;
+    const ctx = output.getContext('2d');
+    const result = ctx.createImageData(width, height);
+    const dst = result.data, sw = input.width, sh = input.height;
+    const sx = sw / region.w, sy = sh / region.h;
+    const stepU = (shape.u1 - shape.u0) / width, stepV = (shape.v1 - shape.v0) / height;
+    for (let row = 0; row < height; row++) {
+      const v = shape.v0 + (row + .5) * stepV;
+      for (let col = 0; col < width; col++) {
+        const u = shape.u0 + (col + .5) * stepU;
+        const z = matrix.g * u + matrix.h * v + 1;
+        const px = ((matrix.a * u + matrix.b * v + matrix.c) / z - region.x) * sx - .5;
+        const py = ((matrix.d * u + matrix.e * v + matrix.f) / z - region.y) * sy - .5;
+        if (px < -1 || px >= sw || py < -1 || py >= sh) continue;
+        const x = Math.floor(px), y = Math.floor(py), fx = px - x, fy = py - y;
+        const x1 = Math.min(sw - 1, x + 1), y1 = Math.min(sh - 1, y + 1);
+        const x0 = Math.max(0, x), y0 = Math.max(0, y);
+        const a = (y0 * sw + x0) * 4, b = (y0 * sw + x1) * 4, c = (y1 * sw + x0) * 4, d = (y1 * sw + x1) * 4;
+        const wa = (1 - fx) * (1 - fy) * src[a + 3], wb = fx * (1 - fy) * src[b + 3];
+        const wc = (1 - fx) * fy * src[c + 3], wd = fx * fy * src[d + 3];
+        const alpha = wa + wb + wc + wd;
+        if (alpha < .5) continue;
+        const dest = (row * width + col) * 4;
+        dst[dest + 3] = alpha;
+        for (let channel = 0; channel < 3; channel++) {
+          dst[dest + channel] = (wa * src[a + channel] + wb * src[b + channel] + wc * src[c + channel] + wd * src[d + channel]) / alpha;
+        }
+      }
+    }
+    ctx.putImageData(result, 0, 0);
+    return output;
+  }
+
+  return { analyze, modulo, rectifiedCut };
+})();
+</script>
 <script>const Studio = (() => {
   function canvas(width, height) {
     const element = document.createElement('canvas');
@@ -608,7 +1037,72 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     return [Math.round(size * x / Math.max(x, y)), Math.round(size * y / Math.max(x, y))];
   }
 
-  function render(target, image, prepared, mask, settings, angle, size) {
+  function planPieces(prepared, mask, settings) {
+    const automatic = settings.orientation !== 'off';
+    const shapeFor = component => {
+      if (!automatic) return null;
+      if (!('geometry' in component)) component.geometry = BookGeometry.analyze(prepared, mask, component);
+      return component.geometry;
+    };
+    const pieces = mask.components.map(region => {
+      const shape = shapeFor(region);
+      const quarter = settings.orientation === 'auto' ? shape?.quarter ?? 0 : 0;
+      const w = shape?.w ?? region.w, h = shape?.h ?? region.h;
+      return { region, shape, quarter, w: quarter % 2 ? h : w, h: quarter % 2 ? w : h,
+        x: region.x + region.w / 2, y: region.y + region.h / 2 };
+    });
+    if (settings.layout === 'original' && pieces.every(piece => !piece.shape)) {
+      const region = { ...bounds(mask.components), id: 0 };
+      return { pieces: [{ region, shape: null, quarter: 0, w: region.w, h: region.h,
+        x: region.x + region.w / 2, y: region.y + region.h / 2 }], rectified: 0, turned: 0, artwork: 0 };
+    }
+
+    const major = pieces.filter(piece => piece.region.area >= mask.components[0].area * .16);
+    if (settings.layout === 'original' && major.length > 1 && major[0].quarter &&
+        major.every(piece => piece.quarter === major[0].quarter)) {
+      const theta = major[0].quarter * Math.PI / 2;
+      const c = Math.cos(theta), s = Math.sin(theta);
+      for (const piece of pieces) [piece.x, piece.y] = [c * piece.x - s * piece.y, s * piece.x + c * piece.y];
+    }
+    const xSpread = Math.max(...major.map(p => p.x)) - Math.min(...major.map(p => p.x));
+    const ySpread = Math.max(...major.map(p => p.y)) - Math.min(...major.map(p => p.y));
+    const vertical = settings.layout === 'stack' || (settings.layout === 'original' && ySpread > xSpread);
+    const axis = vertical ? 'y' : 'x', cross = vertical ? 'x' : 'y', extent = vertical ? 'h' : 'w';
+    const step = Math.min(prepared.width, prepared.height) * settings.gap / 100;
+    const ordered = major.slice().sort((a, b) => a[axis] - b[axis] || a[cross] - b[cross]);
+    // Small pinned fragments follow their nearest book when a layout moves it.
+    const minor = pieces.filter(piece => !major.includes(piece)).map(piece => ({
+      piece, anchor: ordered.reduce((nearest, item) => (
+        Math.hypot(piece.x - item.x, piece.y - item.y) < Math.hypot(piece.x - nearest.x, piece.y - nearest.y) ? item : nearest
+      ), ordered[0])
+    }));
+    const starts = new Map(ordered.map(piece => [piece, { x: piece.x, y: piece.y }]));
+    if (settings.layout !== 'original') {
+      let offset = 0;
+      for (const piece of ordered) {
+        piece[axis] = offset + piece[extent] / 2;
+        piece[cross] = 0;
+        offset += piece[extent] + step;
+      }
+    } else {
+      for (let i = 1; i < ordered.length; i++) {
+        const previous = ordered[i - 1], next = ordered[i];
+        const sharedCross = Math.abs(previous[cross] - next[cross]) < (previous[vertical ? 'w' : 'h'] + next[vertical ? 'w' : 'h']) * .45;
+        if (!sharedCross) continue;
+        const clear = previous[axis] + (previous[extent] + next[extent]) / 2 + step * .35;
+        next[axis] = Math.max(next[axis], clear);
+      }
+    }
+    for (const { piece, anchor } of minor) {
+      const start = starts.get(anchor);
+      piece.x += anchor.x - start.x;
+      piece.y += anchor.y - start.y;
+    }
+    return { pieces, rectified: pieces.filter(p => p.shape).length, turned: pieces.filter(p => p.quarter).length,
+      artwork: pieces.filter(p => p.quarter && p.shape.kind === 'artwork').length };
+  }
+
+  function render(target, image, prepared, mask, settings, adjustments, size) {
     const [width, height] = outputSize(settings.ratio, size);
     target.width = width;
     target.height = height;
@@ -620,32 +1114,34 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     }
     if (!mask.components.length) return false;
 
-    const looseComponents = mask.components.filter(component => component.area >= mask.components[0].area * 0.16);
-    const split = settings.layout !== 'original' && looseComponents.length > 1;
-    const regions = split ? looseComponents.slice().sort((a, b) => (
-      settings.layout === 'stack' ? (a.y + a.h / 2) - (b.y + b.h / 2) || a.x - b.x : (a.x + a.w / 2) - (b.x + b.w / 2)
-    )) : [{ ...bounds(mask.components), id: 0 }];
-    const vertical = settings.layout === 'stack';
-    const gap = Math.min(prepared.width, prepared.height) * settings.gap / 100;
-    const groupWidth = vertical ? Math.max(...regions.map(r => r.w)) : regions.reduce((sum, r) => sum + r.w, 0) + gap * (regions.length - 1);
-    const groupHeight = vertical ? regions.reduce((sum, r) => sum + r.h, 0) + gap * (regions.length - 1) : Math.max(...regions.map(r => r.h));
-    const radians = angle * Math.PI / 180;
-    const rotatedWidth = groupWidth * Math.abs(Math.cos(radians)) + groupHeight * Math.abs(Math.sin(radians));
-    const rotatedHeight = groupHeight * Math.abs(Math.cos(radians)) + groupWidth * Math.abs(Math.sin(radians));
+    const plan = planPieces(prepared, mask, settings);
+    const { pieces } = plan;
+    const left = Math.min(...pieces.map(p => p.x - p.w / 2));
+    const right = Math.max(...pieces.map(p => p.x + p.w / 2));
+    const top = Math.min(...pieces.map(p => p.y - p.h / 2));
+    const bottom = Math.max(...pieces.map(p => p.y + p.h / 2));
+    const cx = (left + right) / 2, cy = (top + bottom) / 2;
+    const radians = (adjustments.angle + adjustments.turn * 90) * Math.PI / 180;
+    const rotatedWidth = (right - left) * Math.abs(Math.cos(radians)) + (bottom - top) * Math.abs(Math.sin(radians));
+    const rotatedHeight = (bottom - top) * Math.abs(Math.cos(radians)) + (right - left) * Math.abs(Math.sin(radians));
     const fit = 1 - 2 * settings.margin / 100;
     const scale = Math.min(width * fit / rotatedWidth, height * fit / rotatedHeight);
     const artwork = canvas(width, height);
-    const artworkCtx = artwork.getContext('2d');
-    artworkCtx.imageSmoothingQuality = 'high';
-    artworkCtx.translate(width / 2, height / 2);
-    artworkCtx.rotate(radians);
-    let offset = vertical ? -groupHeight / 2 : -groupWidth / 2;
-    for (const region of regions) {
-      const cut = makeCutout(image, prepared, mask, region, region.id, scale, settings.edge, settings.exposure);
-      const x = vertical ? -region.w / 2 : offset;
-      const y = vertical ? offset : -region.h / 2;
-      artworkCtx.drawImage(cut, x * scale, y * scale, region.w * scale, region.h * scale);
-      offset += (vertical ? region.h : region.w) + gap;
+    const art = artwork.getContext('2d');
+    art.imageSmoothingQuality = 'high';
+    art.translate(width / 2, height / 2);
+    art.rotate(radians);
+    const nativeScale = Math.max((image.naturalWidth || image.width) / prepared.width, (image.naturalHeight || image.height) / prepared.height);
+    for (const { region, shape, quarter, x, y } of pieces) {
+      const inputScale = shape ? Math.max(scale, Math.min(scale * 1.32, nativeScale)) : scale;
+      const cut = makeCutout(image, prepared, mask, region, region.id, inputScale, settings.edge, settings.exposure);
+      const transformed = shape ? BookGeometry.rectifiedCut(cut, region, shape, scale, canvas) : cut;
+      const w = (shape?.w ?? region.w) * scale, h = (shape?.h ?? region.h) * scale;
+      art.save();
+      art.translate((x - cx) * scale, (y - cy) * scale);
+      art.rotate(quarter * Math.PI / 2);
+      art.drawImage(transformed, -w / 2, -h / 2, w, h);
+      art.restore();
     }
 
     if (settings.shadow > 0) {
@@ -665,7 +1161,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
       ctx.restore();
     }
     ctx.drawImage(artwork, 0, 0);
-    return true;
+    return plan;
   }
 
   const crcTable = Uint32Array.from({ length: 256 }, (_, i) => {
@@ -735,7 +1231,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
   const $$ = selector => [...document.querySelectorAll(selector)];
   const defaults = {
     background: '#e9e7e3', light: 'soft', shadow: 32, softness: 48, direction: 'se', exposure: 0,
-    ratio: 'square', margin: 20, layout: 'original', gap: 6, tolerance: 43, edge: 26, size: 1600, format: 'png'
+    ratio: 'square', margin: 17, layout: 'original', gap: 6, orientation: 'auto', tolerance: 43, edge: 26, size: 1600, format: 'png'
   };
   const lighting = {
     soft: { shadow: 32, softness: 48, direction: 'se' },
@@ -779,6 +1275,15 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     toggle(swatches, 'background', settings.background);
     toggle($$('[data-light]'), 'light', settings.light);
     toggle($$('[data-ratio]'), 'ratio', settings.ratio);
+    toggle($$('[data-orientation]'), 'orientation', settings.orientation);
+    $('#current-name').textContent = selected?.name ?? '';
+    $('#turn-left').disabled = $('#turn-right').disabled = !selected?.prepared;
+    const quarter = selected?.turn ?? 0;
+    const degrees = [0, 90, 180, -90][quarter];
+    $('#turn-value').textContent = quarter ? (degrees > 0 ? '+' : '') + degrees + '°' : '0°';
+    $('[data-setting="gap"]').disabled = settings.layout === 'original';
+    $('#edit-mask').disabled = !selected?.prepared;
+    $('#orientation-note').textContent = settings.orientation === 'auto' ? '根据书边和版面判断方向。' : settings.orientation === 'outline' ? '校正书边的倾斜和透视，沿用原来的阅读方向。' : '沿用原图的角度和透视。';
     const matched = swatches.find(item => item.dataset.background === settings.background);
     $('#bg-name').textContent = matched?.getAttribute('aria-label') ?? '自定义';
     $('#bg-value').textContent = settings.background === 'transparent' ? 'PNG' : settings.background.toUpperCase();
@@ -808,7 +1313,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
   }
 
   function renderQueue() {
-    $('#queue-count').textContent = String(jobs.filter(job => !job.demo).length).padStart(2, '0');
+    $('#queue-count').textContent = jobs.filter(job => !job.demo).length + ' 张';
     $('#items').replaceChildren(...jobs.map(job => {
       const row = document.createElement('div');
       row.className = 'item' + (selected === job ? ' selected' : '');
@@ -922,8 +1427,10 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     $('#paper').classList.toggle('checker', mode === 'result' && settings.background === 'transparent');
     $('#paper').classList.toggle('mask-mode', mode === 'mask');
     if (mode === 'result') {
-      Studio.render(preview, prepared.source, prepared, mask, settings, selected.angle, 960);
-      $('#preview-status').textContent = mask.components.length ? '成片预览' : '等待修正抠图';
+      const plan = Studio.render(preview, prepared.source, prepared, mask, settings, selected, 960);
+      const corrected = plan?.turned ? '已扶正 ' + plan.turned + ' 本' : plan?.rectified ? '已校正书边' : '';
+      $('#preview-status').textContent = !plan ? '等待修正抠图' : corrected || '成片';
+      if (plan?.artwork) $('#orientation-note').textContent = '已按版面扶正。装饰字的方向可用旋转按钮调整。';
     } else {
       drawSource(prepared, mask);
       $('#preview-status').textContent = mode === 'mask' ? '红色区域将从成片中移除' : '原始照片';
@@ -957,6 +1464,38 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
   }
   for (const button of $$('[data-background]')) button.onclick = () => change('background', button.dataset.background);
   for (const button of $$('[data-ratio]')) button.onclick = () => change('ratio', button.dataset.ratio);
+  for (const button of $$('[data-orientation]')) button.onclick = () => {
+    change('orientation', button.dataset.orientation);
+    if (mode !== 'result') setMode('result');
+  };
+  function selectTab(key) {
+    for (const tab of $$('[data-tab]')) {
+      const active = tab.dataset.tab === key;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+    }
+    for (const panel of $$('[data-panel]')) panel.hidden = panel.dataset.panel !== key;
+  }
+  const tabs = $$('[data-tab]');
+  tabs.forEach((tab, index) => {
+    tab.onclick = () => selectTab(tab.dataset.tab);
+    tab.onkeydown = event => {
+      const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+      if (!offset) return;
+      event.preventDefault();
+      const next = tabs[(index + offset + tabs.length) % tabs.length];
+      selectTab(next.dataset.tab);
+      next.focus();
+    };
+  });
+  $('#edit-mask').onclick = () => setMode('mask');
+  function turnBy(steps) {
+    if (!selected?.prepared) return;
+    selected.turn = BookGeometry.modulo(selected.turn + steps);
+    setMode('result');
+  }
+  $('#turn-left').onclick = () => turnBy(-1);
+  $('#turn-right').onclick = () => turnBy(1);
   for (const button of $$('[data-light]')) {
     button.onclick = () => {
       const light = button.dataset.light;
@@ -965,14 +1504,17 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
       schedule();
     };
   }
-  for (const button of $$('[data-view]')) button.onclick = () => setMode(button.dataset.view);
+  for (const button of $$('[data-view]')) button.onclick = () => {
+    if (button.dataset.view === 'mask') selectTab('cut');
+    setMode(button.dataset.view);
+  };
   for (const button of $$('[data-brush]')) button.onclick = () => setBrush(button.dataset.brush);
   $('#custom-bg').oninput = event => change('background', event.target.value);
   $('#reset').onclick = () => {
     Object.assign(settings, defaults);
     sync();
     schedule();
-    toast('已恢复默认样式。单张抠图修正和旋转角度仍保留。');
+    toast('已恢复默认样式。');
   };
   $('#angle').oninput = event => {
     if (!selected) return;
@@ -982,7 +1524,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
   };
 
   function makeJob(name, blob, demo = false) {
-    return { name, blob, demo, prepared: null, edits: null, history: [], sample: null, mask: null, angle: 0 };
+    return { name, blob, demo, prepared: null, edits: null, history: [], sample: null, mask: null, angle: 0, turn: 0 };
   }
 
   async function prepareJob(job) {
@@ -1156,12 +1698,12 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     });
   }
 
-  async function exportImage(job, config, angle) {
+  async function exportImage(job, config, adjustments) {
     const mask = getMask(job, config);
     if (!mask.components.length) throw new Error('这张图需要先修正抠图。');
     const image = await Studio.decode(job.blob);
     const output = Studio.canvas(1, 1);
-    Studio.render(output, image, job.prepared, mask, config, angle, config.size);
+    Studio.render(output, image, job.prepared, mask, config, adjustments, config.size);
     return asBlob(output, 'image/' + config.format, .94);
   }
 
@@ -1179,9 +1721,9 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
   function exportName(name, config, used) {
     const original = name.replace(/\.[^.]+$/, '').replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').trim() || '书籍';
     const ext = config.format === 'jpeg' ? '.jpg' : '.png';
-    let candidate = original + '-册光' + ext;
+    let candidate = original + '-产品图' + ext;
     let index = 2;
-    while (used.has(candidate.toLowerCase())) candidate = original + '-册光-' + index++ + ext;
+    while (used.has(candidate.toLowerCase())) candidate = original + '-产品图-' + index++ + ext;
     used.add(candidate.toLowerCase());
     return candidate;
   }
@@ -1190,7 +1732,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     if (exporting) return;
     const pending = batch ? jobs.filter(job => !job.demo && job.prepared) : [selected].filter(job => job?.prepared);
     if (!pending.length) return;
-    const tasks = pending.map(job => ({ job, angle: job.angle }));
+    const tasks = pending.map(job => ({ job, angle: job.angle, turn: job.turn }));
     const config = { ...settings };
     const files = [];
     const used = new Set();
@@ -1201,7 +1743,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
       for (const [i, task] of tasks.entries()) {
         if (batch) toast('正在导出 ' + (i + 1) + ' / ' + tasks.length + '…');
         try {
-          const blob = await exportImage(task.job, config, task.angle);
+          const blob = await exportImage(task.job, config, task);
           files.push({ name: exportName(task.job.name, config, used), blob });
         } catch (error) {
           if (!batch) throw error;
@@ -1211,7 +1753,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
       }
       if (!files.length) throw new Error('这批图片暂时无法导出，请检查图片和抠图。');
       if (batch) {
-        save(await Studio.zip(files), '册光-产品图.zip');
+        save(await Studio.zip(files), '书籍产品图.zip');
         toast('已打包 ' + files.length + ' 张图片。' + (failed ? '另有 ' + failed + ' 张未导出，请检查图片和抠图。' : ''));
       } else {
         save(files[0].blob, files[0].name);
@@ -1236,7 +1778,7 @@ select{width:100%;min-height:29px;background:var(--surface);border:1px solid var
     ctx.fillStyle = table;
     ctx.fillRect(0, 0, 1000, 850);
     ctx.translate(514, 427);
-    ctx.rotate(-0.105);
+    ctx.rotate(-0.145);
     ctx.shadowColor = '#0009';
     ctx.shadowBlur = 18;
     ctx.shadowOffsetX = 7;
