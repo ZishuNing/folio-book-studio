@@ -1,187 +1,276 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="在浏览器内批量整理书籍产品照。">
-<title>书籍产品图</title>
+<meta name="description" content="Straighten, style, and export book photos in your browser.">
+<title>Book Photo Editor</title>
 <style>:root {
   color-scheme: light;
-  --ink: #1c1e1b;
-  --muted: #555951;
-  --line: #d9dbd2;
-  --paper: #f9f9f5;
-  --outer: #eeefe9;
-  --stage: #e1e3dc;
-  --lime: #dff38c;
-  --lime-strong: #cfe577;
-  --font: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --ink: #191b20;
+  --muted: #5a606c;
+  --line: #e2e5ea;
+  --canvas: #f5f6f8;
+  --panel: #fff;
+  --blue: #005fc2;
+  --blue-hover: #004fa3;
+  --blue-wash: #edf5ff;
+  --stage-height: clamp(390px, calc(100dvh - 361px), 720px);
+  --font: -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--outer); color: var(--ink); font: 14px/1.5 var(--font); }
+body {
+  margin: 0; background: var(--canvas); color: var(--ink);
+  font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased;
+}
 button, select, input { font: inherit; }
-button { cursor: pointer; color: inherit; }
-button:disabled { cursor: default; opacity: .45; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
-  outline: 2px solid #4d6523; outline-offset: 3px;
+button { color: inherit; cursor: pointer; }
+button:disabled { opacity: .52; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: 3px;
 }
-svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; flex: none; }
-.svg-defs, .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+svg {
+  width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.65;
+  stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: middle;
+}
+.svg-defs, .sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
 .site-head {
-  height: 66px; background: #20221d; color: #fafbf3; border-bottom: 1px solid #151612;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 max(26px, calc((100vw - 1548px) / 2));
+  min-height: 71px; padding: 0 max(28px, calc((100vw - 1480px) / 2));
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: #fff; border-bottom: 1px solid var(--line);
 }
-.app-title { margin: 0; font-size: 19px; font-weight: 770; line-height: 1.1; white-space: nowrap; letter-spacing: -.035em; }
+.app-title { margin: 0; font-size: 22px; font-weight: 720; line-height: 1.1; letter-spacing: -.045em; }
 .head-actions, .local { display: flex; align-items: center; }
-.head-actions { gap: 22px; }
-.local { color: #d1d4c6; font-size: 12px; gap: 6px; }
-.local svg { width: 15px; height: 15px; color: #cbd98d; }
-.button { min-height: 40px; padding: 0 13px; display: inline-flex; justify-content: center; align-items: center; gap: 7px; white-space: nowrap; border: 1px solid transparent; border-radius: 4px; font-size: 13px; font-weight: 720; }
+.head-actions { gap: 22px; flex: none; }
+.local { gap: 6px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.local svg { width: 15px; height: 15px; }
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 42px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px;
+  white-space: nowrap; font-size: 13px; font-weight: 650; line-height: 1.2;
+}
 .button svg { width: 16px; height: 16px; }
-.primary { color: #242819; background: var(--lime); border-color: #c4d67b; }
-.primary:hover:not(:disabled) { background: var(--lime-strong); border-color: #adbf66; }
-.secondary { background: transparent; border-color: #c7cbc0; }
-.secondary:hover:not(:disabled) { background: #eeefe7; border-color: #9a9d91; }
-main { max-width: 1600px; margin: 0 auto; padding: 19px 26px 20px; }
-.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 17px; align-items: stretch; }
-.left-column { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.preview, .settings, .queue { background: var(--paper); border: 1px solid #d4d7cb; border-radius: 5px; min-width: 0; overflow: hidden; }
-.preview { display: flex; flex-direction: column; flex: 1; }
-.preview-head { min-height: 65px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.primary { background: var(--blue); color: #fff; }
+.primary:hover:not(:disabled) { background: var(--blue-hover); }
+.site-head .primary { background: #202329; border-radius: 999px; padding-inline: 16px 18px; }
+.site-head .primary:hover { background: #383e47; }
+.secondary { background: #fff; border-color: #d8dde4; }
+.secondary:hover:not(:disabled) { background: #f5f7fa; border-color: #b9c1cc; }
+
+main { max-width: 1536px; margin: 0 auto; padding: 26px 28px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 336px; gap: 22px; align-items: stretch; }
+.left-column, .settings {
+  min-width: 0; border: 1px solid var(--line); border-radius: 20px;
+  background: var(--panel); box-shadow: 0 2px 4px #12182305, 0 10px 28px #12182305;
+}
+.left-column { display: flex; flex-direction: column; }
+.preview { min-width: 0; display: flex; flex-direction: column; }
+.preview-head {
+  min-height: 66px; padding: 10px 19px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
 .view-title { min-width: 0; display: flex; align-items: baseline; gap: 12px; }
-.view-title h2 { margin: 0; font-size: 17px; line-height: 1.1; font-weight: 800; letter-spacing: -.06em; white-space: nowrap; }
-#current-name { color: var(--muted); font: 11px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.segmented { display: inline-flex; align-items: center; padding: 2px; gap: 2px; background: #ecede7; border: 1px solid #e0e2d9; border-radius: 4px; flex: none; }
-.segmented button { border: 1px solid transparent; background: transparent; border-radius: 3px; padding: 5px 11px; color: var(--muted); white-space: nowrap; font-size: 12px; font-weight: 650; }
-.segmented button[aria-pressed=true] { color: var(--ink); background: #fff; border-color: #dcdfd4; box-shadow: 0 1px 2px #18221a10; }
-.stage { background: var(--stage); border-block: 1px solid #d9dcd2; padding: 25px; min-height: 405px; flex: 1; display: grid; place-items: center; overflow: hidden; }
-.paper { display: flex; align-items: center; justify-content: center; max-width: 100%; min-width: 0; box-shadow: 0 1px 2px #21271a29, 0 12px 40px -14px #272d236b; background: #e9e7e3; }
-#preview { display: block; max-width: 100%; max-height: clamp(320px, calc(100dvh - 385px), 690px); width: auto; height: auto; object-fit: contain; }
+.view-title h2, .editor-head h2 { margin: 0; font-size: 19px; line-height: 1.15; font-weight: 700; letter-spacing: -.038em; }
+#current-name { min-width: 0; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.segmented {
+  display: inline-flex; align-items: center; padding: 3px; gap: 2px; flex: none;
+  border: 1px solid #e4e7ed; border-radius: 10px; background: #eef0f3;
+}
+.segmented button {
+  border: 1px solid transparent; background: transparent; border-radius: 7px; padding: 5px 13px;
+  color: var(--muted); white-space: nowrap; font-size: 12px; font-weight: 610;
+}
+.segmented button:hover { color: var(--ink); }
+.segmented button[aria-pressed=true] { color: var(--ink); background: #fff; border-color: #e3e7ec; box-shadow: 0 1px 2px #15203612; }
+.stage {
+  height: var(--stage-height); margin: 0 12px; min-width: 0; overflow: hidden; padding: 22px;
+  display: grid; place-items: center; border-radius: 13px; border: 1px solid #e8eaef;
+  background: radial-gradient(ellipse at 45% 25%, #f6f7f9, #ebedf2);
+}
+.paper {
+  display: flex; align-items: center; justify-content: center; min-width: 0; max-width: 100%;
+  box-shadow: 0 1px 2px #18203430, 0 12px 36px -10px #18203443;
+  background: #e9e7e3;
+}
+#preview { display: block; min-width: 0; max-width: 100%; max-height: calc(var(--stage-height) - 46px); width: auto; height: auto; object-fit: contain; }
 .paper.mask-mode #preview { touch-action: none; cursor: crosshair; }
-.empty { padding: 20px; text-align: center; color: var(--muted); }
-.empty > svg { width: 35px; height: 35px; }
-.empty h3 { margin: 8px 0 3px; font-size: 17px; color: var(--ink); }
-.empty p { margin: 0; font-size: 12px; }
-.preview-foot { padding: 0 14px; min-height: 34px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font: 11px var(--mono); }
-.preview-foot > span:first-child { display: flex; align-items: center; gap: 6px; font: 11px var(--font); }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: #57713b; }
-.dot.wait { background: #a67b43; }
-.mask-tools { min-height: 41px; padding: 5px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line); }
-.brush-size { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-.brush-size input { width: 70px; }
-.notice { background: #f8f0d6; color: #61501f; padding: 8px 13px; font-size: 12px; }
-.queue { padding: 10px 12px 12px; }
-.queue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
-.queue-head h2 { margin: 0; font-size: 12px; }
-#queue-count { color: var(--muted); margin-left: 5px; font: 11px var(--mono); }
-.queue-content, .items { display: flex; align-items: stretch; gap: 7px; min-width: 0; }
+.empty { padding: 16px; text-align: center; color: var(--muted); }
+.empty > svg { width: 32px; height: 32px; }
+.empty h3 { margin: 8px 0 4px; font-size: 17px; color: var(--ink); letter-spacing: -.02em; }
+.empty p { margin: 0; font-size: 13px; }
+.preview-foot {
+  min-height: 41px; padding: 0 19px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  color: var(--muted); font: 11px var(--mono);
+}
+.preview-foot > span:first-child { display: flex; align-items: center; gap: 7px; font: 12px var(--font); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #358365; }
+.dot.wait { background: #a46a26; }
+.mask-tools { padding: 0 14px 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.brush-size { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.brush-size input { width: 72px; }
+.notice { background: #fff8e9; color: #624619; padding: 8px 14px; font-size: 12px; }
+
+.queue { padding: 12px 15px 15px; border-top: 1px solid #ebedf1; }
+.queue-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.queue-head h2 { margin: 0; font-size: 13px; font-weight: 690; }
+#queue-count { color: var(--muted); margin-left: 5px; font: 12px var(--mono); }
+.queue-content, .items { min-width: 0; display: flex; align-items: stretch; gap: 8px; }
 .items { overflow-x: auto; }
-.drop { flex: none; width: 90px; min-height: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; padding: 3px; border: 1px dashed #a9afa1; background: #f1f3e9; color: #4d5743; border-radius: 4px; font-size: 10px; font-weight: 700; }
-.drop > svg { width: 15px; height: 15px; }
-.drop:hover, .dragover .drop { border-color: #56673c; background: #eaf2cd; }
-.dragover .stage { box-shadow: inset 0 0 0 2px #728748; }
-.item { flex: 0 0 154px; max-width: 154px; min-height: 52px; padding: 4px; display: flex; align-items: center; gap: 2px; background: #f2f3ed; border: 1px solid #dbded3; border-radius: 4px; }
-.item.selected { background: #eef4d9; border-color: #99a770; }
-.item-pick { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; text-align: left; }
-.item-image { width: 42px; height: 40px; flex: none; object-fit: cover; border-radius: 2px; background: #e0e1d8; display: grid; place-items: center; }
+.drop {
+  flex: none; min-height: 56px; width: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 3px; border: 1px dashed #b9c1cc; background: #fff; color: var(--muted); border-radius: 9px;
+  font-size: 10px; font-weight: 650;
+}
+.drop svg { width: 16px; height: 16px; }
+.drop:hover, .dragover .drop { border-color: var(--blue); color: var(--blue); background: var(--blue-wash); }
+.dragover .stage { box-shadow: inset 0 0 0 2px #4383d8; }
+.item {
+  flex: 0 0 158px; max-width: 158px; min-height: 56px; padding: 5px; display: flex; align-items: center; gap: 3px;
+  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+}
+.item.selected { background: var(--blue-wash); border-color: #aecdf1; }
+.item-pick { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 0; border: 0; background: transparent; text-align: left; }
+.item-image { width: 43px; height: 42px; flex: none; object-fit: cover; border-radius: 5px; background: #eceef2; display: grid; place-items: center; }
 .item-title, .item-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-title { font-size: 11px; font-weight: 730; }
-.item-meta { margin-top: 3px; color: var(--muted); font: 10px var(--mono); }
-.item-remove { padding: 4px; border: 0; background: transparent; color: var(--muted); border-radius: 3px; }
+.item-title { font-size: 12px; font-weight: 650; }
+.item-meta { margin-top: 3px; color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.item-remove { display: grid; place-items: center; padding: 4px; border: 0; background: transparent; color: var(--muted); border-radius: 4px; }
 .item-remove svg { width: 13px; height: 13px; }
-.item-remove:hover { background: #e4e8d9; color: #22251d; }
+.item-remove:hover { background: #e2e8f0; color: var(--ink); }
+
 .settings { display: flex; flex-direction: column; }
-.editor-head, .editor-tabs { padding-inline: 15px; display: flex; align-items: center; }
-.editor-head { min-height: 49px; justify-content: space-between; }
-.editor-head h2 { font-size: 16px; margin: 0; letter-spacing: -.04em; }
-.text-btn { border: 0; background: transparent; color: var(--muted); border-radius: 3px; padding: 4px 5px; white-space: nowrap; font-size: 11px; font-weight: 650; display: inline-flex; align-items: center; gap: 4px; }
-.text-btn svg { width: 13px; height: 13px; }
-.text-btn:hover:not(:disabled) { color: var(--ink); background: #e9ece0; }
-.editor-tabs { gap: 19px; border-bottom: 1px solid var(--line); }
-.editor-tabs button { padding: 6px 3px 9px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 13px; font-weight: 650; }
-.editor-tabs button[aria-selected=true] { color: var(--ink); border-color: #464d33; }
-.settings-content { flex: 1; }
-.setting-section { margin: 0 15px; padding: 14px 0; border-bottom: 1px solid #e1e3db; }
+.editor-head { min-height: 64px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.text-btn {
+  border: 0; background: transparent; color: var(--muted); border-radius: 6px; padding: 4px 6px;
+  white-space: nowrap; font-size: 12px; font-weight: 610; display: inline-flex; align-items: center; gap: 5px;
+}
+.text-btn svg { width: 14px; height: 14px; }
+.text-btn:hover:not(:disabled) { color: var(--ink); background: #eff1f5; }
+.demo-btn { color: var(--blue); }
+.editor-tabs {
+  margin: 0 17px; padding: 3px; border-radius: 10px; border: 1px solid #e5e8ed; background: #eef0f4;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px;
+}
+.editor-tabs button {
+  min-height: 33px; min-width: 0; padding: 5px; border: 1px solid transparent; border-radius: 7px;
+  color: var(--muted); background: transparent; font-size: 13px; font-weight: 630;
+}
+.editor-tabs button[aria-selected=true] { color: var(--ink); background: #fff; border-color: #e2e6ec; box-shadow: 0 1px 2px #15203612; }
+.settings-content { flex: 1; padding-top: 5px; }
+.setting-section { margin: 0 18px; padding: 16px 0; border-bottom: 1px solid #eaedf1; }
 .setting-section:last-child { border-bottom: 0; }
-.setting-section h3, .export-area h3 { margin: 0 0 8px; font-size: 12px; font-weight: 750; }
-.option-grid { display: grid; gap: 4px; }
-.option-grid button { min-height: 33px; border: 1px solid var(--line); border-radius: 4px; background: #f1f2eb; white-space: nowrap; font-size: 11px; padding: 4px 5px; display: flex; justify-content: center; align-items: center; gap: 5px; }
-.option-grid button:hover:not(:disabled) { border-color: #9ca58b; }
-.option-grid button[aria-pressed=true] { background: #e9f0d3; border-color: #abb986; color: #313b22; font-weight: 730; }
-.orientation-grid { grid-template-columns: 1.15fr 1fr .6fr; }
+.setting-section h3, .export-area h3 { margin: 0 0 9px; font-size: 13px; font-weight: 690; }
+.option-grid { display: grid; gap: 5px; }
+.option-grid button {
+  min-height: 35px; min-width: 0; padding: 4px 5px; display: flex; justify-content: center; align-items: center; gap: 6px;
+  border: 1px solid #e0e4eb; border-radius: 8px; background: #f7f8fa; white-space: nowrap; font-size: 12px;
+}
+.option-grid button:hover:not(:disabled) { border-color: #b7c5d6; background: #f2f5f9; }
+.option-grid button[aria-pressed=true] { background: var(--blue-wash); border-color: #b5d2f5; color: #004d9d; font-weight: 680; }
+.orientation-grid { grid-template-columns: 1fr 1.24fr .75fr; }
 .ratio-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .light-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.field-note { font-size: 11px; line-height: 1.45; color: var(--muted); margin: 7px 0 0; }
-.turn-row { margin-top: 10px; display: flex; align-items: center; gap: 5px; }
-.turn-row > span { margin-right: 4px; color: var(--muted); font-size: 11px; }
-.turn-row output { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
-.icon-button { width: 32px; height: 30px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); background: transparent; border-radius: 4px; }
-.icon-button:hover:not(:disabled) { background: #e7ebdc; }
-.icon-button svg { width: 16px; height: 16px; }
+.field-note { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.36; }
+.turn-row { margin-top: 12px; display: flex; align-items: center; gap: 5px; }
+.turn-row > span { margin-right: 5px; color: var(--muted); font-size: 12px; }
+.turn-row output { margin-left: auto; color: var(--muted); font: 11px var(--mono); }
+.icon-button {
+  width: 35px; height: 33px; display: grid; place-items: center; padding: 0;
+  border: 1px solid var(--line); background: #fff; border-radius: 8px;
+}
+.icon-button:hover:not(:disabled) { background: #f1f4f8; }
+.icon-button svg { width: 17px; height: 17px; }
 .ratio { width: 11px; height: 11px; border: 1px solid currentColor; display: inline-block; border-radius: 1px; }
 .ratio.portrait { width: 9px; height: 12px; }
 .ratio.landscape { width: 13px; height: 9px; }
 .ratio.story { width: 7px; height: 12px; }
-.slider { display: block; margin-top: 10px; }
+.slider { display: block; margin-top: 11px; }
 .slider > span { display: flex; justify-content: space-between; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
-.slider output { color: #454b3b; font: 11px var(--mono); }
-input[type=range] { accent-color: #616d47; cursor: pointer; margin: 5px 0 0; height: 14px; }
+.slider output { color: #353b47; font: 11px var(--mono); }
+input[type=range] { accent-color: var(--blue); cursor: pointer; height: 15px; margin: 6px 0 0; }
+input[type=range]:disabled { cursor: default; opacity: .6; }
 .slider input { width: 100%; display: block; }
-select { display: block; width: 100%; min-height: 33px; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--line); background: #f0f1e9; color: var(--ink); font-size: 12px; }
-.field { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
-.field select { max-width: 132px; }
-details { margin-top: 9px; }
-summary { display: flex; justify-content: space-between; gap: 5px; align-items: center; color: var(--muted); font-size: 11px; cursor: pointer; list-style: none; }
+select {
+  display: block; min-height: 36px; width: 100%; margin: 0; border: 1px solid var(--line); border-radius: 8px;
+  background: #f7f8fa; color: var(--ink); font-size: 13px; padding: 4px 7px;
+}
+.field { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 11px; color: var(--muted); font-size: 12px; }
+.field select { max-width: 136px; }
+details { margin-top: 10px; }
+summary { display: flex; justify-content: space-between; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; cursor: pointer; list-style: none; }
 summary::-webkit-details-marker { display: none; }
-summary svg { width: 13px; height: 13px; }
+summary svg { width: 14px; height: 14px; }
 details[open] summary svg { transform: rotate(180deg); }
 #edit-mask { margin-top: 12px; }
 .swatches { display: flex; gap: 6px; }
-.swatches button, .custom-chip { position: relative; display: grid; place-items: center; flex: 1 1 0; height: 29px; padding: 0; min-width: 0; border: 1px solid #c8ccbe; border-radius: 4px; background: var(--chip); }
-.swatches button[aria-pressed=true] { outline: 1px solid #4f5e36; outline-offset: 2px; }
-.custom-chip { background: #eff1e7; }
-.custom-chip svg { width: 14px; height: 14px; }
+.swatches button, .custom-chip {
+  position: relative; display: grid; place-items: center; flex: 1 1 0; min-width: 0;
+  height: 30px; padding: 0; border: 1px solid #d0d5de; border-radius: 7px; background: var(--chip);
+}
+.swatches button[aria-pressed=true] { outline: 1.5px solid var(--blue); outline-offset: 2px; }
+.custom-chip { background: #f4f5f8; }
+.custom-chip svg { width: 15px; height: 15px; }
 .custom-chip input { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; opacity: 0; }
-.custom-chip:focus-within { outline: 2px solid #626e47; outline-offset: 2px; }
-.checker { background-color: #fdfdf9 !important; background-image: repeating-conic-gradient(#dde0d7 0% 25%, transparent 0% 50%) !important; background-size: 13px 13px !important; }
+.custom-chip:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+.checker { background-color: #fbfbfc !important; background-image: repeating-conic-gradient(#dee2e8 0% 25%, transparent 0% 50%) !important; background-size: 13px 13px !important; }
 .background-label { display: flex; justify-content: space-between; gap: 6px; color: var(--muted); font-size: 11px; margin-top: 8px; }
 .background-label span:last-child { font-family: var(--mono); }
 .light-icon { width: 12px; height: 12px; display: inline-block; border: 1px solid currentColor; border-radius: 50%; }
-.light-icon.soft { background: linear-gradient(140deg, #eef1e5, #809067); }
+.light-icon.soft { background: linear-gradient(140deg, #fff, #b0bed1); }
 .light-icon.side { background: linear-gradient(105deg, transparent 50%, currentColor 50%); }
-.export-area { margin-top: auto; padding: 13px 15px 15px; border-top: 1px solid var(--line); background: #f4f5ee; }
-.export-fields { margin-bottom: 7px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 6px; }
-.download { width: 100%; min-height: 37px; }
-.download + .download { margin-top: 5px; }
-.toast { position: fixed; z-index: 5; bottom: 18px; left: 50%; transform: translateX(-50%); margin: 0; padding: 9px 13px; background: #262b20; color: #fff; border-radius: 4px; box-shadow: 0 4px 14px #12171036; font-size: 12px; width: max-content; max-width: calc(100vw - 24px); }
-@media (max-width: 980px) {
-  .site-head { padding-inline: 17px; }
-  main { padding: 16px 17px 24px; }
-  .workspace { grid-template-columns: minmax(0, 1fr) 278px; gap: 11px; }
+.export-area { margin-top: auto; padding: 14px 17px 17px; border-top: 1px solid var(--line); background: #fafbfd; border-radius: 0 0 19px 19px; }
+.export-fields { margin-bottom: 9px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 7px; }
+.export-fields label > span { display: block; margin-bottom: 4px; color: var(--muted); font-size: 11px; }
+.download { width: 100%; }
+.download + .download { margin-top: 6px; }
+.toast {
+  position: fixed; z-index: 5; bottom: 18px; left: 50%; transform: translateX(-50%); margin: 0;
+  padding: 10px 15px; background: #20242d; color: #fff; border-radius: 10px; box-shadow: 0 8px 26px #1421343b;
+  font-size: 13px; width: max-content; max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 1080px) {
+  .site-head { padding-inline: 20px; }
+  main { padding: 20px; }
+  .workspace { grid-template-columns: minmax(0, 1fr) 306px; gap: 14px; }
   .view-title { flex-direction: column; gap: 4px; }
 }
-@media (max-width: 690px) {
-  .site-head { height: 57px; padding-inline: 12px; }
-  .app-title { font-size: 17px; }
+@media (max-width: 740px) {
+  :root { --stage-height: clamp(235px, 47dvh, 495px); }
+  .site-head { min-height: 60px; padding-inline: 14px; }
+  .app-title { font-size: 19px; }
   .head-actions { gap: 10px; }
   .local span { display: none; }
-  .button { min-height: 37px; padding-inline: 10px; font-size: 12px; }
-  main { padding: 10px 10px 20px; }
-  .workspace { grid-template-columns: minmax(0, 1fr); gap: 9px; }
-  .left-column { gap: 8px; }
-  .preview-head { padding: 7px 10px; min-height: 54px; }
-  .view-title h2 { font-size: 15px; }
-  .view-title #current-name { font-size: 10px; }
-  .segmented button { padding-inline: 7px; font-size: 11px; }
-  .stage { padding: 13px; min-height: 215px; }
-  #preview { max-height: 50vh; }
-  .queue { padding: 6px 9px 8px; }
-  .queue-head { margin-bottom: 4px; }
-  .editor-head { min-height: 42px; }
-  .setting-section { padding-block: 11px; }
+  .site-head .primary { min-height: 37px; padding-inline: 10px 12px; }
+  main { padding: 12px 11px 19px; }
+  .workspace { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .left-column, .settings { border-radius: 15px; }
+  .preview-head { min-height: 59px; padding: 8px 12px; }
+  .view-title h2, .editor-head h2 { font-size: 17px; }
+  #current-name { font-size: 11px; }
+  .segmented button { padding-inline: 7px; }
+  .stage { margin: 0 7px; padding: 12px; border-radius: 10px; }
+  #preview { max-height: calc(var(--stage-height) - 26px); }
+  .preview-foot { padding-inline: 11px; min-height: 36px; }
+  .queue { padding: 8px 9px 9px; }
+  .queue-head { margin-bottom: 6px; }
+  .editor-head { min-height: 51px; }
+  .setting-section { padding-block: 13px; }
+  .export-area { border-radius: 0 0 14px 14px; }
+}
+@media (max-width: 360px) {
+  .local { display: none; }
+  .head-actions { gap: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  button, summary { transition: background-color .14s ease, border-color .14s ease, color .14s ease; }
 }
 </style>
 </head>
@@ -199,140 +288,140 @@ details[open] summary svg { transform: rotate(180deg); }
 <symbol id="i-turn-right" viewBox="0 0 24 24"><path d="m15 4 5 5-5 5m5-5h-9a6 6 0 0 0-6 6v4"/></symbol>
 </defs></svg>
 <header class="site-head">
-  <h1 class="app-title">书籍产品图</h1>
+  <h1 class="app-title">Book Photo Editor</h1>
   <div class="head-actions">
-    <div class="local"><svg aria-hidden="true"><use href="#i-shield"/></svg><span>照片仅在本机处理</span></div>
-    <button class="button primary" id="add"><svg aria-hidden="true"><use href="#i-plus"/></svg> 导入照片</button>
+    <div class="local"><svg aria-hidden="true"><use href="#i-shield"/></svg><span>Processed on this device</span></div>
+    <button class="button primary" id="add"><svg aria-hidden="true"><use href="#i-plus"/></svg> Add photos</button>
   </div>
   <input type="file" id="files" accept="image/*,.jpg,.jpeg,.png,.webp,.avif,.heic,.heif" multiple hidden>
 </header>
 <main>
   <div class="workspace">
     <div class="left-column">
-      <section class="preview" aria-label="图像预览">
+      <section class="preview" aria-label="Image preview">
         <header class="preview-head">
-          <div class="view-title"><h2>预览</h2><span id="current-name"></span></div>
-          <div class="segmented view-toggle" aria-label="预览模式">
-            <button type="button" data-view="source" aria-pressed="false">原图</button>
-            <button type="button" data-view="result" aria-pressed="true">成片</button>
-            <button type="button" data-view="mask" aria-pressed="false">修抠图</button>
+          <div class="view-title"><h2>Preview</h2><span id="current-name"></span></div>
+          <div class="segmented view-toggle" aria-label="Preview mode">
+            <button type="button" data-view="source" aria-pressed="false">Original</button>
+            <button type="button" data-view="result" aria-pressed="true">Result</button>
+            <button type="button" data-view="mask" aria-pressed="false">Mask</button>
           </div>
         </header>
         <div id="mask-tools" class="mask-tools" hidden>
-          <div class="segmented" aria-label="抠图工具">
-            <button data-brush="sample" aria-pressed="false">取背景色</button>
-            <button data-brush="keep" aria-pressed="true">保留</button>
-            <button data-brush="erase" aria-pressed="false">擦除</button>
+          <div class="segmented" aria-label="Mask tools">
+            <button data-brush="sample" aria-pressed="false">Sample color</button>
+            <button data-brush="keep" aria-pressed="true">Keep</button>
+            <button data-brush="erase" aria-pressed="false">Erase</button>
           </div>
-          <label class="brush-size">笔刷 <input id="brush-size" aria-label="笔刷大小" type="range" min="3" max="60" value="18"></label>
-          <button id="undo" class="text-btn" disabled>撤销</button>
-          <button id="reset-mask" class="text-btn">还原</button>
+          <label class="brush-size">Brush <input id="brush-size" aria-label="Brush size" type="range" min="3" max="60" value="18"></label>
+          <button id="undo" class="text-btn" disabled>Undo</button>
+          <button id="reset-mask" class="text-btn">Reset mask</button>
         </div>
         <div id="stage" class="stage">
-          <div id="empty" class="empty" hidden><svg aria-hidden="true"><use href="#i-image"/></svg><h3 id="empty-title">添加图片开始</h3><p id="empty-body">支持拖入原始书照，或先试用示例图。</p></div>
-          <div id="paper" class="paper" hidden><canvas id="preview" aria-label="当前书籍照片预览"></canvas></div>
+          <div id="empty" class="empty" hidden><svg aria-hidden="true"><use href="#i-image"/></svg><h3 id="empty-title">Add a photo to start</h3><p id="empty-body">Drop in your book photos or try the sample.</p></div>
+          <div id="paper" class="paper" hidden><canvas id="preview" aria-label="Current book photo preview"></canvas></div>
         </div>
-        <footer class="preview-foot"><span><i class="dot" id="preview-dot"></i><span id="preview-status" aria-live="polite">等待图片</span></span><span id="preview-size"></span></footer>
+        <footer class="preview-foot"><span><i class="dot" id="preview-dot"></i><span id="preview-status" aria-live="polite">No photo selected</span></span><span id="preview-size"></span></footer>
         <div id="notice" class="notice" role="status" hidden></div>
       </section>
       <section class="queue" aria-labelledby="queue-head">
-        <header class="queue-head"><h2 id="queue-head">照片队列 <span id="queue-count"></span></h2><button id="demo" class="text-btn demo-btn">示例图</button></header>
+        <header class="queue-head"><h2 id="queue-head">Photos <span id="queue-count"></span></h2><button id="demo" class="text-btn demo-btn">Try sample</button></header>
         <div class="queue-content">
-          <button id="drop" class="drop" title="可拖入多张照片"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>添加或拖入</span></button>
+          <button id="drop" class="drop" title="Add or drop multiple photos"><svg aria-hidden="true"><use href="#i-plus"/></svg><span>Add or drop</span></button>
           <div id="items" class="items"></div>
         </div>
       </section>
     </div>
-    <aside class="settings" aria-label="编辑和导出">
+    <aside class="settings" aria-label="Adjustments and export">
       <div class="editor-head">
-        <h2>编辑</h2><button id="reset" class="text-btn" title="恢复默认样式"><svg aria-hidden="true"><use href="#i-reset"/></svg> 重置</button>
+        <h2>Adjustments</h2><button id="reset" class="text-btn" title="Restore default settings"><svg aria-hidden="true"><use href="#i-reset"/></svg> Reset</button>
       </div>
-      <div class="editor-tabs" role="tablist" aria-label="编辑设置">
-        <button type="button" role="tab" id="tab-compose" aria-controls="panel-compose" aria-selected="true" data-tab="compose">构图</button>
-        <button type="button" role="tab" id="tab-light" aria-controls="panel-light" aria-selected="false" data-tab="light" tabindex="-1">光影</button>
-        <button type="button" role="tab" id="tab-cut" aria-controls="panel-cut" aria-selected="false" data-tab="cut" tabindex="-1">抠图</button>
+      <div class="editor-tabs" role="tablist" aria-label="Adjustment tabs">
+        <button type="button" role="tab" id="tab-compose" aria-controls="panel-compose" aria-selected="true" data-tab="compose">Layout</button>
+        <button type="button" role="tab" id="tab-light" aria-controls="panel-light" aria-selected="false" data-tab="light" tabindex="-1">Lighting</button>
+        <button type="button" role="tab" id="tab-cut" aria-controls="panel-cut" aria-selected="false" data-tab="cut" tabindex="-1">Cutout</button>
       </div>
       <div class="settings-content">
         <div class="settings-page" id="panel-compose" role="tabpanel" aria-labelledby="tab-compose" data-panel="compose">
           <section class="setting-section">
-            <h3>书本校正</h3>
-            <div class="option-grid orientation-grid" role="group" aria-label="自动扶正模式">
-              <button type="button" data-orientation="auto" aria-pressed="true">自动扶正</button>
-              <button type="button" data-orientation="outline" aria-pressed="false">仅透视</button>
-              <button type="button" data-orientation="off" aria-pressed="false">关</button>
+            <h3>Straightening</h3>
+            <div class="option-grid orientation-grid" role="group" aria-label="Straightening mode">
+              <button type="button" data-orientation="auto" aria-pressed="true">Auto</button>
+              <button type="button" data-orientation="outline" aria-pressed="false">Perspective</button>
+              <button type="button" data-orientation="off" aria-pressed="false">Off</button>
             </div>
-            <p class="field-note" id="orientation-note">根据书边和可辨认的文字方向校正。</p>
-            <div class="turn-row" role="group" aria-label="旋转当前照片">
-              <span>当前照片</span>
-              <button type="button" id="turn-left" class="icon-button" aria-label="向左旋转 90 度" title="向左旋转 90 度"><svg aria-hidden="true"><use href="#i-turn-left"/></svg></button>
-              <button type="button" id="turn-right" class="icon-button" aria-label="向右旋转 90 度" title="向右旋转 90 度"><svg aria-hidden="true"><use href="#i-turn-right"/></svg></button>
+            <p class="field-note" id="orientation-note">Straightens edges and detects reading direction.</p>
+            <div class="turn-row" role="group" aria-label="Rotate the current photo">
+              <span>Rotate photo</span>
+              <button type="button" id="turn-left" class="icon-button" aria-label="Rotate 90° left" title="Rotate 90° left"><svg aria-hidden="true"><use href="#i-turn-left"/></svg></button>
+              <button type="button" id="turn-right" class="icon-button" aria-label="Rotate 90° right" title="Rotate 90° right"><svg aria-hidden="true"><use href="#i-turn-right"/></svg></button>
               <output id="turn-value"></output>
             </div>
-            <details><summary>微调角度 <svg aria-hidden="true"><use href="#i-chevron"/></svg></summary>
-              <label class="slider"><span>当前照片 <output id="angle-value"></output></span><input id="angle" type="range" min="-30" max="30" step="0.5" value="0"></label>
+            <details><summary>Fine rotation <svg aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+              <label class="slider"><span>Angle <output id="angle-value"></output></span><input id="angle" type="range" min="-30" max="30" step="0.5" value="0"></label>
             </details>
           </section>
           <section class="setting-section">
-            <h3>画幅</h3>
-            <div class="option-grid ratio-grid" role="group" aria-label="成片画幅">
-              <button data-ratio="square"><i class="ratio square"></i>1:1</button>
-              <button data-ratio="portrait"><i class="ratio portrait"></i>4:5</button>
-              <button data-ratio="landscape"><i class="ratio landscape"></i>4:3</button>
-              <button data-ratio="story"><i class="ratio story"></i>9:16</button>
+            <h3>Aspect ratio</h3>
+            <div class="option-grid ratio-grid" role="group" aria-label="Output aspect ratio">
+              <button data-ratio="square"><i class="ratio square" aria-hidden="true"></i>1:1</button>
+              <button data-ratio="portrait"><i class="ratio portrait" aria-hidden="true"></i>4:5</button>
+              <button data-ratio="landscape"><i class="ratio landscape" aria-hidden="true"></i>4:3</button>
+              <button data-ratio="story"><i class="ratio story" aria-hidden="true"></i>9:16</button>
             </div>
-            <label class="slider"><span>留白 <output data-out="margin"></output></span><input type="range" min="5" max="36" data-setting="margin"></label>
+            <label class="slider"><span>Margin <output data-out="margin"></output></span><input type="range" min="5" max="36" data-setting="margin"></label>
           </section>
           <section class="setting-section">
-            <h3>多本排版</h3>
-            <select data-setting="layout" aria-label="多本排版"><option value="original">随原图方向</option><option value="row">横向并排</option><option value="stack">纵向排列</option></select>
-            <label class="slider"><span>书本间距 <output data-out="gap"></output></span><input type="range" min="2" max="22" data-setting="gap"></label>
+            <h3>Book arrangement</h3>
+            <select data-setting="layout" aria-label="Book arrangement"><option value="original">Follow photo layout</option><option value="row">Side by side</option><option value="stack">Stacked</option></select>
+            <label class="slider"><span>Spacing <output data-out="gap"></output></span><input type="range" min="2" max="22" data-setting="gap"></label>
           </section>
         </div>
         <div class="settings-page" id="panel-light" role="tabpanel" aria-labelledby="tab-light" data-panel="light" hidden>
           <section class="setting-section">
-            <h3>背景</h3>
-            <div class="swatches" aria-label="背景配色">
-              <button title="雾灰" aria-label="雾灰" data-background="#e9e7e3" style="--chip:#e9e7e3"></button>
-              <button title="暖白" aria-label="暖白" data-background="#f5f0e7" style="--chip:#f5f0e7"></button>
-              <button title="浅粉" aria-label="浅粉" data-background="#e6c4c2" style="--chip:#e6c4c2"></button>
-              <button title="淡苔绿" aria-label="淡苔绿" data-background="#cbd1c2" style="--chip:#cbd1c2"></button>
-              <button title="炭黑" aria-label="炭黑" data-background="#292725" style="--chip:#292725"></button>
-              <button title="透明" aria-label="透明" data-background="transparent" class="checker"></button>
-              <label class="custom-chip" title="自定义背景色"><svg aria-hidden="true"><use href="#i-plus"/></svg><input id="custom-bg" aria-label="自定义背景色" type="color" value="#e9e7e3"></label>
+            <h3>Background</h3>
+            <div class="swatches" aria-label="Background colors">
+              <button title="Soft gray" aria-label="Soft gray" data-background="#e9e7e3" style="--chip:#e9e7e3"></button>
+              <button title="Warm white" aria-label="Warm white" data-background="#f5f0e7" style="--chip:#f5f0e7"></button>
+              <button title="Dusty pink" aria-label="Dusty pink" data-background="#e6c4c2" style="--chip:#e6c4c2"></button>
+              <button title="Sage" aria-label="Sage" data-background="#cbd1c2" style="--chip:#cbd1c2"></button>
+              <button title="Charcoal" aria-label="Charcoal" data-background="#292725" style="--chip:#292725"></button>
+              <button title="Transparent" aria-label="Transparent" data-background="transparent" class="checker"></button>
+              <label class="custom-chip" title="Custom background color"><svg aria-hidden="true"><use href="#i-plus"/></svg><input id="custom-bg" aria-label="Custom background color" type="color" value="#e9e7e3"></label>
             </div>
-            <div class="background-label"><span id="bg-name">雾灰</span><span id="bg-value">#E9E7E3</span></div>
+            <div class="background-label"><span id="bg-name">Soft gray</span><span id="bg-value">#E9E7E3</span></div>
           </section>
           <section class="setting-section">
-            <h3>灯光与阴影</h3>
-            <div class="option-grid light-grid" aria-label="灯光预设">
-              <button data-light="soft" aria-pressed="true"><i class="light-icon soft"></i> 柔光</button>
-              <button data-light="side" aria-pressed="false"><i class="light-icon side"></i> 侧光</button>
-              <button data-light="flat" aria-pressed="false"><i class="light-icon flat"></i> 无阴影</button>
+            <h3>Light and shadow</h3>
+            <div class="option-grid light-grid" aria-label="Lighting presets">
+              <button data-light="soft" aria-pressed="true"><i class="light-icon soft"></i> Soft</button>
+              <button data-light="side" aria-pressed="false"><i class="light-icon side"></i> Side light</button>
+              <button data-light="flat" aria-pressed="false"><i class="light-icon flat"></i> None</button>
             </div>
-            <label class="slider"><span>阴影浓度 <output data-out="shadow"></output></span><input type="range" min="0" max="90" data-setting="shadow"></label>
-            <label class="slider"><span>阴影柔度 <output data-out="softness"></output></span><input type="range" min="0" max="100" data-setting="softness"></label>
-            <label class="field"><span>投影方向</span><select data-setting="direction"><option value="se">右下</option><option value="sw">左下</option><option value="s">正下</option><option value="e">向右</option><option value="w">向左</option></select></label>
-            <label class="slider"><span>书面亮度 <output data-out="exposure"></output></span><input type="range" min="-18" max="18" data-setting="exposure"></label>
+            <label class="slider"><span>Shadow strength <output data-out="shadow"></output></span><input type="range" min="0" max="90" data-setting="shadow"></label>
+            <label class="slider"><span>Shadow softness <output data-out="softness"></output></span><input type="range" min="0" max="100" data-setting="softness"></label>
+            <label class="field"><span>Shadow direction</span><select data-setting="direction"><option value="se">Down right</option><option value="sw">Down left</option><option value="s">Down</option><option value="e">Right</option><option value="w">Left</option></select></label>
+            <label class="slider"><span>Book brightness <output data-out="exposure"></output></span><input type="range" min="-18" max="18" data-setting="exposure"></label>
           </section>
         </div>
         <div class="settings-page" id="panel-cut" role="tabpanel" aria-labelledby="tab-cut" data-panel="cut" hidden>
           <section class="setting-section">
-            <h3>轮廓</h3>
-            <label class="slider"><span>背景容差 <output data-out="tolerance"></output></span><input type="range" min="4" max="116" data-setting="tolerance"></label>
-            <label class="slider"><span>边缘收紧 <output data-out="edge"></output></span><input type="range" min="0" max="100" data-setting="edge"></label>
-            <p class="field-note">容差适用于整批。单张的边缘可在画面上取色或涂改。</p>
-            <button type="button" id="edit-mask" class="button secondary">检查抠图</button>
+            <h3>Cutout edges</h3>
+            <label class="slider"><span>Background tolerance <output data-out="tolerance"></output></span><input type="range" min="4" max="116" data-setting="tolerance"></label>
+            <label class="slider"><span>Edge cleanup <output data-out="edge"></output></span><input type="range" min="0" max="100" data-setting="edge"></label>
+            <p class="field-note">Tolerance applies to the batch. Refine individual cutouts with the mask tools.</p>
+            <button type="button" id="edit-mask" class="button secondary">Edit mask</button>
           </section>
         </div>
       </div>
       <section class="export-area">
-        <h3>导出</h3>
+        <h3>Export</h3>
         <div class="export-fields">
-          <label><span class="sr-only">输出尺寸</span><select data-setting="size"><option value="1080">长边 1080 px</option><option value="1600">长边 1600 px</option><option value="2400">长边 2400 px</option><option value="3200">长边 3200 px</option></select></label>
-          <label><span class="sr-only">图片格式</span><select data-setting="format"><option value="png">PNG</option><option value="jpeg">JPG</option></select></label>
+          <label><span>Longest edge</span><select data-setting="size"><option value="1080">1080 px</option><option value="1600">1600 px</option><option value="2400">2400 px</option><option value="3200">3200 px</option></select></label>
+          <label><span>Format</span><select data-setting="format"><option value="png">PNG</option><option value="jpeg">JPG</option></select></label>
         </div>
-        <button id="download" class="button primary download"><svg aria-hidden="true"><use href="#i-down"/></svg> 下载当前图</button>
-        <button id="download-all" class="button secondary download"><svg aria-hidden="true"><use href="#i-stack"/></svg> 批量下载 ZIP</button>
+        <button id="download" class="button primary download"><svg aria-hidden="true"><use href="#i-down"/></svg> Download image</button>
+        <button id="download-all" class="button secondary download"><svg aria-hidden="true"><use href="#i-stack"/></svg> Download all (ZIP)</button>
       </section>
     </aside>
   </div>
@@ -1185,7 +1274,7 @@ details[open] summary svg { transform: rotate(180deg); }
     for (const file of files) {
       const name = encoder.encode(file.name);
       const bytes = new Uint8Array(await file.blob.arrayBuffer());
-      if (offset + bytes.length > 0xffffffff - indexSize - 65536) throw new Error('ZIP 超出 4 GB，请分批导出。');
+      if (offset + bytes.length > 0xffffffff - indexSize - 65536) throw new Error('The ZIP exceeds 4 GB. Export a smaller batch.');
       const crc = crc32(bytes);
       const header = new DataView(new ArrayBuffer(30));
       header.setUint32(0, 0x04034b50, true);
@@ -1281,11 +1370,11 @@ details[open] summary svg { transform: rotate(180deg); }
     const quarter = selected?.turn ?? 0;
     const degrees = [0, 90, 180, -90][quarter];
     $('#turn-value').textContent = quarter ? (degrees > 0 ? '+' : '') + degrees + '°' : '0°';
-    $('[data-setting="gap"]').disabled = settings.layout === 'original';
+    $('[data-setting="gap"]').closest('label').hidden = settings.layout === 'original';
     $('#edit-mask').disabled = !selected?.prepared;
-    $('#orientation-note').textContent = settings.orientation === 'auto' ? '根据书边和版面判断方向。' : settings.orientation === 'outline' ? '校正书边的倾斜和透视，沿用原来的阅读方向。' : '沿用原图的角度和透视。';
+    $('#orientation-note').textContent = settings.orientation === 'auto' ? 'Straightens edges and detects reading direction.' : settings.orientation === 'outline' ? 'Straightens the edges and keeps the photo’s orientation.' : 'Keeps the photo’s angle and perspective.';
     const matched = swatches.find(item => item.dataset.background === settings.background);
-    $('#bg-name').textContent = matched?.getAttribute('aria-label') ?? '自定义';
+    $('#bg-name').textContent = matched?.getAttribute('aria-label') ?? 'Custom';
     $('#bg-value').textContent = settings.background === 'transparent' ? 'PNG' : settings.background.toUpperCase();
     if (settings.background !== 'transparent') {
       $('#custom-bg').value = settings.background;
@@ -1313,7 +1402,9 @@ details[open] summary svg { transform: rotate(180deg); }
   }
 
   function renderQueue() {
-    $('#queue-count').textContent = jobs.filter(job => !job.demo).length + ' 张';
+    const photoCount = jobs.filter(job => !job.demo).length;
+    $('#queue-count').textContent = String(photoCount);
+    $('#queue-count').hidden = photoCount === 0;
     $('#items').replaceChildren(...jobs.map(job => {
       const row = document.createElement('div');
       row.className = 'item' + (selected === job ? ' selected' : '');
@@ -1336,13 +1427,13 @@ details[open] summary svg { transform: rotate(180deg); }
       title.title = job.name;
       const meta = document.createElement('span');
       meta.className = 'item-meta';
-      meta.textContent = job.error ? '读取失败' : job.demo ? '示例图片' : job.prepared ? job.prepared.fullWidth + ' × ' + job.prepared.fullHeight : '读取中…';
+      meta.textContent = job.error ? 'Couldn’t open' : job.demo ? 'Sample photo' : job.prepared ? job.prepared.fullWidth + ' × ' + job.prepared.fullHeight : 'Opening…';
       copy.append(title, meta);
       pick.append(thumb, copy);
       pick.addEventListener('click', () => choose(job));
       const remove = document.createElement('button');
       remove.className = 'item-remove';
-      remove.setAttribute('aria-label', '移除 ' + job.name);
+      remove.setAttribute('aria-label', 'Remove ' + job.name);
       remove.innerHTML = icon('close');
       remove.addEventListener('click', () => {
         const index = jobs.indexOf(job);
@@ -1417,9 +1508,9 @@ details[open] summary svg { transform: rotate(180deg); }
     const notice = $('#notice');
     notice.hidden = true;
     if (!ready) {
-      $('#empty-title').textContent = selected?.error ? '这张图片无法读取' : selected ? '正在读取图片' : '添加图片开始';
-      $('#empty-body').textContent = selected?.error ? '可先另存为 JPG 或 PNG，再添加一次。' : selected ? '正在载入原照片。' : '拖入原始书照，或先试用示例图。';
-      $('#preview-status').textContent = selected?.error ? '读取失败' : selected ? '读取中' : '等待图片';
+      $('#empty-title').textContent = selected?.error ? 'This photo couldn’t be opened' : selected ? 'Opening photo' : 'Add a photo to start';
+      $('#empty-body').textContent = selected?.error ? 'Save it as a JPG or PNG, then try again.' : selected ? 'The photo is loading.' : 'Drop in your book photos or try the sample.';
+      $('#preview-status').textContent = selected?.error ? 'Couldn’t open' : selected ? 'Opening' : 'No photo selected';
       return;
     }
     const prepared = selected.prepared;
@@ -1428,16 +1519,17 @@ details[open] summary svg { transform: rotate(180deg); }
     $('#paper').classList.toggle('mask-mode', mode === 'mask');
     if (mode === 'result') {
       const plan = Studio.render(preview, prepared.source, prepared, mask, settings, selected, 960);
-      const corrected = plan?.turned ? '已扶正 ' + plan.turned + ' 本' : plan?.rectified ? '已校正书边' : '';
-      $('#preview-status').textContent = !plan ? '等待修正抠图' : corrected || '成片';
-      if (plan?.artwork) $('#orientation-note').textContent = '已按版面扶正。装饰字的方向可用旋转按钮调整。';
+      let corrected = plan?.rectified ? 'Edges straightened' : '';
+      if (plan?.turned) corrected = plan.turned === 1 ? '1 book straightened' : plan.turned + ' books straightened';
+      $('#preview-status').textContent = !plan ? 'Cutout needs attention' : corrected || 'Result';
+      if (plan?.artwork) $('#orientation-note').textContent = 'Orientation estimated from the cover. Use the rotate buttons if needed.';
     } else {
       drawSource(prepared, mask);
-      $('#preview-status').textContent = mode === 'mask' ? '红色区域将从成片中移除' : '原始照片';
+      $('#preview-status').textContent = mode === 'mask' ? 'Red areas will be removed' : 'Original photo';
     }
     if (!mask) return;
-    const warning = !mask.components.length ? '没找到书本轮廓。可降低背景容差，或用「修抠图」指定要保留的区域。'
-      : mask.uncertain ? '轮廓贴到原图边缘，建议在「修抠图」检查是否带入桌面，或是否有部分书本超出画面。' : '';
+    const warning = !mask.components.length ? 'No book edges detected. Lower background tolerance or use the mask to mark what to keep.'
+      : mask.uncertain ? 'The cutout reaches the edge of the photo. Check the mask for leftover background or cropped book edges.' : '';
     notice.hidden = !warning;
     notice.textContent = warning;
   }
@@ -1451,7 +1543,7 @@ details[open] summary svg { transform: rotate(180deg); }
   function change(key, value) {
     settings[key] = value;
     if (key === 'shadow' || key === 'softness' || key === 'direction') settings.light = 'custom';
-    if (key === 'background' && value === 'transparent') toast('透明背景使用 PNG 导出。');
+    if (key === 'background' && value === 'transparent') toast('Transparent backgrounds are exported as PNG.');
     sync();
     schedule();
   }
@@ -1514,7 +1606,7 @@ details[open] summary svg { transform: rotate(180deg); }
     Object.assign(settings, defaults);
     sync();
     schedule();
-    toast('已恢复默认样式。');
+    toast('Default settings restored.');
   };
   $('#angle').oninput = event => {
     if (!selected) return;
@@ -1546,11 +1638,11 @@ details[open] summary svg { transform: rotate(180deg); }
     if (!received.length) return;
     const accepted = received.filter(file => file.type.startsWith('image/') || /\.(jpe?g|png|webp|avif|gif|bmp|heic|heif|tiff?|svg)$/i.test(file.name));
     if (adding) {
-      toast('正在读取上一组图片，请稍后再添加。');
+      toast('Wait for the current photos to finish opening.');
       return;
     }
     if (!accepted.length) {
-      toast('请选择浏览器支持的图片文件。');
+      toast('Choose a supported image file.');
       return;
     }
     adding = true;
@@ -1571,7 +1663,7 @@ details[open] summary svg { transform: rotate(180deg); }
         schedule();
       }
       if (newJobs[0].error && selected === newJobs[0]) choose(newJobs.find(job => job.prepared && jobs.includes(job)) ?? selected);
-      if (failures || accepted.length < received.length) toast('部分文件无法读取。可转换为 JPG 或 PNG 后重试。');
+      if (failures || accepted.length < received.length) toast('Some files couldn’t be opened. Convert them to JPG or PNG and try again.');
     } finally {
       adding = false;
     }
@@ -1694,13 +1786,13 @@ details[open] summary svg { transform: rotate(180deg); }
 
   function asBlob(element, type, quality) {
     return new Promise((resolve, reject) => {
-      element.toBlob(blob => blob ? resolve(blob) : reject(new Error('浏览器无法编码图像。')), type, quality);
+      element.toBlob(blob => blob ? resolve(blob) : reject(new Error('Your browser couldn’t encode the image.')), type, quality);
     });
   }
 
   async function exportImage(job, config, adjustments) {
     const mask = getMask(job, config);
-    if (!mask.components.length) throw new Error('这张图需要先修正抠图。');
+    if (!mask.components.length) throw new Error('Refine the cutout before exporting this photo.');
     const image = await Studio.decode(job.blob);
     const output = Studio.canvas(1, 1);
     Studio.render(output, image, job.prepared, mask, config, adjustments, config.size);
@@ -1719,11 +1811,11 @@ details[open] summary svg { transform: rotate(180deg); }
   }
 
   function exportName(name, config, used) {
-    const original = name.replace(/\.[^.]+$/, '').replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').trim() || '书籍';
+    const original = name.replace(/\.[^.]+$/, '').replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').trim() || 'book';
     const ext = config.format === 'jpeg' ? '.jpg' : '.png';
-    let candidate = original + '-产品图' + ext;
+    let candidate = original + '-edited' + ext;
     let index = 2;
-    while (used.has(candidate.toLowerCase())) candidate = original + '-产品图-' + index++ + ext;
+    while (used.has(candidate.toLowerCase())) candidate = original + '-edited-' + index++ + ext;
     used.add(candidate.toLowerCase());
     return candidate;
   }
@@ -1741,7 +1833,7 @@ details[open] summary svg { transform: rotate(180deg); }
     sync();
     try {
       for (const [i, task] of tasks.entries()) {
-        if (batch) toast('正在导出 ' + (i + 1) + ' / ' + tasks.length + '…');
+        if (batch) toast('Exporting ' + (i + 1) + ' / ' + tasks.length + '…');
         try {
           const blob = await exportImage(task.job, config, task);
           files.push({ name: exportName(task.job.name, config, used), blob });
@@ -1751,16 +1843,17 @@ details[open] summary svg { transform: rotate(180deg); }
         }
         if (task.job !== selected) task.job.mask = null;
       }
-      if (!files.length) throw new Error('这批图片暂时无法导出，请检查图片和抠图。');
+      if (!files.length) throw new Error('No photos could be exported. Check the cutouts and try again.');
       if (batch) {
-        save(await Studio.zip(files), '书籍产品图.zip');
-        toast('已打包 ' + files.length + ' 张图片。' + (failed ? '另有 ' + failed + ' 张未导出，请检查图片和抠图。' : ''));
+        save(await Studio.zip(files), 'book-photos.zip');
+        const exported = files.length === 1 ? '1 photo' : files.length + ' photos';
+        toast('ZIP ready with ' + exported + (failed ? '. Could not export ' + failed + '.' : '.'));
       } else {
         save(files[0].blob, files[0].name);
-        toast('已开始下载。');
+        toast('Download started.');
       }
     } catch (error) {
-      toast(error.message || '导出失败，请尝试较小的输出尺寸。');
+      toast(error.message || 'Export failed. Try a smaller output size.');
     } finally {
       exporting = false;
       sync();
@@ -1862,7 +1955,7 @@ details[open] summary svg { transform: rotate(180deg); }
         sync();
       }
     } catch {
-      toast('示例图无法打开。可以添加自己的图片。');
+      toast('The sample couldn’t be opened. Try adding your own photo.');
     } finally {
       $('#demo').disabled = false;
     }
