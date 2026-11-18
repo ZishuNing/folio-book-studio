@@ -272,6 +272,21 @@ details[open] summary svg { transform: rotate(180deg); }
 @media (prefers-reduced-motion: no-preference) {
   button, summary { transition: background-color .14s ease, border-color .14s ease, color .14s ease; }
 }
+
+.toggle-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 690; cursor: pointer;
+}
+.toggle-row input {
+  appearance: none; position: relative; margin: 0; cursor: pointer; flex: none;
+  width: 36px; height: 22px; border: 1px solid #b6becb; border-radius: 999px; background: #dce0e6;
+}
+.toggle-row input::after {
+  content: ""; display: block; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  border-radius: 100%; background: #fff; box-shadow: 0 1px 3px #15203635;
+}
+.toggle-row input:checked { background: var(--blue); border-color: var(--blue); }
+.toggle-row input:checked::after { transform: translateX(14px); }
 </style>
 </head>
 <body>
@@ -378,6 +393,13 @@ details[open] summary svg { transform: rotate(180deg); }
           </section>
         </div>
         <div class="settings-page" id="panel-light" role="tabpanel" aria-labelledby="tab-light" data-panel="light" hidden>
+          <section class="setting-section glare-section">
+            <label class="toggle-row">
+              <span>Reduce glare</span>
+              <input type="checkbox" role="switch" data-setting="glare" aria-describedby="glare-note" checked>
+            </label>
+            <p class="field-note" id="glare-note">Repairs small highlights on colored covers.</p>
+          </section>
           <section class="setting-section">
             <h3>Background</h3>
             <div class="swatches" aria-label="Background colors">
@@ -796,6 +818,239 @@ details[open] summary svg { transform: rotate(180deg); }
   return { analyze, modulo, rectifiedCut };
 })();
 </script>
+<script>const Glare = (() => {
+  const luma = (r, g, b) => .2126 * r + .7152 * g + .0722 * b;
+  const chroma = (r, g, b) => Math.max(r, g, b) - Math.min(r, g, b);
+  const median = values => values.sort((a, b) => a - b)[values.length >> 1];
+  const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+  const smooth = (low, high, value) => {
+    const t = clamp((value - low) / (high - low), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+
+  function seeds(pixels, labels, width, height) {
+    const seen = new Uint8Array(labels.length);
+    for (let i = 0; i < labels.length; i++) {
+      if (!labels[i]) continue;
+      const p = i * 4;
+      const r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
+      if (Math.max(r, g, b) >= 225 && Math.min(r, g, b) >= 155 &&
+          luma(r, g, b) >= 178 && chroma(r, g, b) <= 76) seen[i] = 1;
+    }
+
+    const groups = [];
+    for (let i = 0; i < seen.length; i++) {
+      if (!seen[i]) continue;
+      const id = labels[i], points = [i];
+      let x0 = width, y0 = height, x1 = 0, y1 = 0;
+      seen[i] = 0;
+      for (let j = 0; j < points.length; j++) {
+        const pos = points[j], x = pos % width, y = Math.floor(pos / width);
+        x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+        y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+        for (let dy = Math.max(0, y - 2); dy <= Math.min(height - 1, y + 2); dy++) {
+          for (let dx = Math.max(0, x - 2); dx <= Math.min(width - 1, x + 2); dx++) {
+            const neighbor = dy * width + dx;
+            if (!seen[neighbor] || labels[neighbor] !== id) continue;
+            seen[neighbor] = 0;
+            points.push(neighbor);
+          }
+        }
+      }
+      if (points.length >= 7 && x1 - x0 >= 3 && y1 - y0 >= 3) groups.push({ id, points, x0, y0, x1, y1 });
+    }
+    return groups.sort((a, b) => b.points.length - a.points.length);
+  }
+
+  function nearbyPaper(pixels, labels, stride, hit, box, pad) {
+    const records = [];
+    let ringCount = 0;
+    for (let y = box.y0; y <= box.y1; y += 2) {
+      for (let x = box.x0; x <= box.x1; x += 2) {
+        const i = y * stride + x;
+        const d = Math.max(hit.x0 - x, x - hit.x1, hit.y0 - y, y - hit.y1);
+        if (d < Math.max(5, .23 * pad) || labels[i] !== hit.id) continue;
+        ringCount++;
+        const p = i * 4, r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
+        const light = luma(r, g, b), color = chroma(r, g, b);
+        if (light < 45 || light > 177 || color < 36) continue;
+        records.push({ x, y, light, r, g, b, u: (r - g) / color, v: (b - g) / color });
+      }
+    }
+    if (records.length < Math.max(30, ringCount * .35)) return null;
+    const u = median(records.map(s => s.u)), v = median(records.map(s => s.v));
+    const light = median(records.map(s => s.light));
+    const clean = records.filter(s => Math.abs(s.u - u) < .19 && Math.abs(s.v - v) < .19 && Math.abs(s.light - light) < 17);
+    if (clean.length < Math.max(22, records.length * .57, ringCount * .30)) return null;
+
+    // Fit a local color plane to the nearby stock so smooth shading continues through the repair.
+    const channels = ['r', 'g', 'b'];
+    const mean = key => clean.reduce((sum, s) => sum + s[key], 0) / clean.length;
+    const cx = mean('x'), cy = mean('y');
+    let xx = 0, xy = 0, yy = 0;
+    for (const s of clean) {
+      const x = s.x - cx, y = s.y - cy;
+      xx += x * x; xy += x * y; yy += y * y;
+    }
+    const determinant = xx * yy - xy * xy;
+    const planes = channels.map(key => {
+      const center = mean(key);
+      let xc = 0, yc = 0;
+      for (const s of clean) {
+        xc += (s.x - cx) * (s[key] - center);
+        yc += (s.y - cy) * (s[key] - center);
+      }
+      return {
+        center,
+        dx: determinant > 1 ? (yy * xc - xy * yc) / determinant : 0,
+        dy: determinant > 1 ? (xx * yc - xy * xc) / determinant : 0
+      };
+    });
+    return {
+      colorAt(x, y) {
+        return planes.map(({ center, dx, dy }) => center + clamp(dx * (x - cx) + dy * (y - cy), -18, 18));
+      },
+      u, v, light
+    };
+  }
+
+  function grow(pixels, labels, stride, hit, box, paper) {
+    const width = box.x1 - box.x0 + 1, height = box.y1 - box.y0 + 1;
+    const alpha = new Uint8Array(width * height);
+    const seedMap = new Uint8Array(alpha.length);
+    const frontier = [];
+    for (const p of hit.points) {
+      const x = p % stride - box.x0, y = Math.floor(p / stride) - box.y0;
+      seedMap[y * width + x] = 1;
+    }
+
+    const tested = new Uint8Array(alpha.length);
+    let fringe = 0, core = 0;
+    function visit(x, y) {
+      if (x < 0 || x >= width || y < 0 || y >= height) return;
+      const i = y * width + x;
+      if (tested[i]) return;
+      tested[i] = 1;
+      const source = (y + box.y0) * stride + x + box.x0;
+      if (labels[source] !== hit.id) return;
+      const p = source * 4, r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
+      const [pr, pg, pb] = paper.colorAt(x + box.x0, y + box.y0);
+      const lift = luma(r - pr, g - pg, b - pb);
+      const saturation = chroma(r, g, b) / Math.max(1, r, g, b);
+      const diffuseSaturation = chroma(pr, pg, pb) / Math.max(1, pr, pg, pb);
+      const loss = diffuseSaturation - saturation;
+      if (lift < 13 || loss < .038 || Math.min(r - pr, g - pg, b - pb) < -13) return;
+      alpha[i] = Math.round(255 * smooth(12, 38, lift) * smooth(.032, .09, loss));
+      frontier.push(i);
+      if (seedMap[i]) core++;
+      if (lift >= 19 && lift <= 61 && !seedMap[i]) {
+        let nearCore = false;
+        for (let r = Math.max(y - 2, 0); r <= Math.min(y + 2, height - 1) && !nearCore; r++) {
+          for (let c = Math.max(x - 2, 0); c <= Math.min(x + 2, width - 1); c++) {
+            if (seedMap[r * width + c]) { nearCore = true; break; }
+          }
+        }
+        if (!nearCore) fringe++;
+      }
+    }
+    for (const p of hit.points) visit(p % stride - box.x0, Math.floor(p / stride) - box.y0);
+    for (let q = 0; q < frontier.length; q++) {
+      const p = frontier[q], x = p % width, y = Math.floor(p / width);
+      visit(x - 1, y); visit(x + 1, y); visit(x, y - 1); visit(x, y + 1);
+    }
+    // Printed whites usually transition directly to the stock, without a broader highlight shoulder.
+    if (core < hit.points.length * .67 || fringe < Math.max(11, core * .15)) return null;
+    return { alpha, width, height, frontier };
+  }
+
+  function textureOffset(pixels, labels, stride, height, hit, box, shape, paper) {
+    const step = Math.max(6, Math.round(Math.max(hit.x1 - hit.x0, hit.y1 - hit.y0) / 6));
+    const limit = step * 12;
+    const samples = [];
+    for (let y = 2; y < shape.height - 2; y += 5) {
+      for (let x = 2; x < shape.width - 2; x += 5) {
+        if (shape.alpha[y * shape.width + x] < 80) continue;
+        samples.push([x + box.x0, y + box.y0]);
+      }
+    }
+
+    let best = null, cost = Infinity;
+    if (samples.length < 6) return best;
+    for (let dy = -limit; dy <= limit; dy += step) {
+      for (let dx = -limit; dx <= limit; dx += step) {
+        if (Math.abs(dx) < hit.x1 - hit.x0 + step * 2 && Math.abs(dy) < hit.y1 - hit.y0 + step * 2) continue;
+        let error = 0, valid = 0;
+        for (const [sx, sy] of samples) {
+          const x = sx + dx, y = sy + dy;
+          if (x < 2 || x >= stride - 2 || y < 2 || y >= height - 2 || labels[y * stride + x] !== hit.id) continue;
+          const p = (y * stride + x) * 4, r = pixels[p], g = pixels[p + 1], b = pixels[p + 2];
+          const c = chroma(r, g, b), l = luma(r, g, b);
+          if (c < 38 || Math.abs(l - paper.light) > 19 || Math.abs((r - g) / c - paper.u) > .18 ||
+              Math.abs((b - g) / c - paper.v) > .18) continue;
+          error += Math.abs(l - paper.light);
+          valid++;
+        }
+        if (valid < samples.length * .96) continue;
+        const score = error / valid + Math.hypot(dx, dy) * .14;
+        if (score < cost) { cost = score; best = { dx, dy }; }
+      }
+    }
+    return best;
+  }
+
+  function repair(prepared, mask) {
+    const { pixels, width, height } = prepared;
+    const { labels, components } = mask;
+    const byId = new Map(components.map(c => [c.id, c]));
+    const results = [], covered = new Uint8Array(labels.length);
+    for (const hit of seeds(pixels, labels, width, height)) {
+      const region = byId.get(hit.id);
+      if (hit.points.some(p => covered[p])) continue;
+      const shortSide = Math.min(region.w, region.h);
+      const hitWidth = hit.x1 - hit.x0 + 1, hitHeight = hit.y1 - hit.y0 + 1;
+      const span = Math.max(hitWidth, hitHeight), thickness = Math.min(hitWidth, hitHeight);
+      // Thin white lettering and reflective book edges are both common.
+      if (thickness < Math.max(8, shortSide * .029) || span > thickness * 3.4 ||
+          hit.points.length > region.area * .034 || span > shortSide * .37) continue;
+      const pad = Math.max(12, Math.min(Math.round(shortSide * .13), Math.round(span * .68)));
+      const box = { x0: Math.max(0, region.x, hit.x0 - pad), y0: Math.max(0, region.y, hit.y0 - pad),
+        x1: Math.min(width - 1, region.x + region.w - 1, hit.x1 + pad),
+        y1: Math.min(height - 1, region.y + region.h - 1, hit.y1 + pad) };
+      const paper = nearbyPaper(pixels, labels, width, hit, box, pad);
+      if (!paper) continue;
+      const shape = grow(pixels, labels, width, hit, box, paper);
+      if (!shape || shape.frontier.length > region.area * .075) continue;
+      const donor = textureOffset(pixels, labels, width, height, hit, box, shape, paper);
+      const data = new Uint8ClampedArray(shape.width * shape.height * 4);
+      for (const i of shape.frontier) {
+        if (!shape.alpha[i]) continue;
+        const x = i % shape.width + box.x0, y = Math.floor(i / shape.width) + box.y0;
+        const original = y * width + x;
+        if (covered[original]) continue;
+        const color = paper.colorAt(x, y);
+        if (donor) {
+          const sx = x + donor.dx, sy = y + donor.dy, d = (sy * width + sx) * 4;
+          if (sx >= 2 && sx < width - 2 && sy >= 2 && sy < height - 2 && labels[sy * width + sx] === hit.id &&
+              Math.abs(luma(pixels[d], pixels[d + 1], pixels[d + 2]) - paper.light) < 19) {
+            for (let c = 0; c < 3; c++) {
+              const center = pixels[d + c];
+              const neighborhood = (pixels[d + c - 8] + pixels[d + c + 8] + pixels[d + c - width * 8] + pixels[d + c + width * 8]) / 4;
+              color[c] += clamp(center - neighborhood, -6, 6);
+            }
+          }
+        }
+        data.set(color, i * 4);
+        data[i * 4 + 3] = shape.alpha[i];
+        covered[original] = 1;
+      }
+      results.push({ id: hit.id, x: box.x0, y: box.y0, w: shape.width, h: shape.height, data });
+    }
+    return results;
+  }
+
+  return { repair };
+})();
+</script>
 <script>const Studio = (() => {
   function canvas(width, height) {
     const element = document.createElement('canvas');
@@ -1081,7 +1336,7 @@ details[open] summary svg { transform: rotate(180deg); }
     return { x, y, w: Math.max(...components.map(c => c.x + c.w)) - x, h: Math.max(...components.map(c => c.y + c.h)) - y };
   }
 
-  function makeCutout(image, prepared, mask, region, pieceId, scale, edge, exposure) {
+  function makeCutout(image, prepared, mask, region, pieceId, scale, edge, exposure, repairs) {
     const { width, height } = prepared;
     const matte = canvas(region.w, region.h);
     const maskCtx = matte.getContext('2d');
@@ -1105,6 +1360,11 @@ details[open] summary svg { transform: rotate(180deg); }
     const sx = (image.naturalWidth || image.width) / width;
     const sy = (image.naturalHeight || image.height) / height;
     ctx.drawImage(image, region.x * sx, region.y * sy, region.w * sx, region.h * sy, 0, 0, result.width, result.height);
+    for (const repair of repairs) {
+      if (pieceId && repair.id !== pieceId) continue;
+      const fx = result.width / region.w, fy = result.height / region.h;
+      ctx.drawImage(repair.layer, (repair.x - region.x) * fx, (repair.y - region.y) * fy, repair.w * fx, repair.h * fy);
+    }
     if (exposure) {
       const tones = ctx.getImageData(0, 0, result.width, result.height);
       const gain = 1 + exposure / 100;
@@ -1204,6 +1464,16 @@ details[open] summary svg { transform: rotate(180deg); }
     if (!mask.components.length) return false;
 
     const plan = planPieces(prepared, mask, settings);
+    if (settings.glare && !mask.glare) {
+      mask.glare = Glare.repair(prepared, mask).map(repair => {
+        const layer = canvas(repair.w, repair.h);
+        layer.getContext('2d').putImageData(new ImageData(repair.data, repair.w, repair.h), 0, 0);
+        const { data, ...bounds } = repair;
+        return { ...bounds, layer };
+      });
+    }
+    const repairs = settings.glare ? mask.glare : [];
+    plan.glareCount = repairs.length;
     const { pieces } = plan;
     const left = Math.min(...pieces.map(p => p.x - p.w / 2));
     const right = Math.max(...pieces.map(p => p.x + p.w / 2));
@@ -1223,7 +1493,7 @@ details[open] summary svg { transform: rotate(180deg); }
     const nativeScale = Math.max((image.naturalWidth || image.width) / prepared.width, (image.naturalHeight || image.height) / prepared.height);
     for (const { region, shape, quarter, x, y } of pieces) {
       const inputScale = shape ? Math.max(scale, Math.min(scale * 1.32, nativeScale)) : scale;
-      const cut = makeCutout(image, prepared, mask, region, region.id, inputScale, settings.edge, settings.exposure);
+      const cut = makeCutout(image, prepared, mask, region, region.id, inputScale, settings.edge, settings.exposure, repairs);
       const transformed = shape ? BookGeometry.rectifiedCut(cut, region, shape, scale, canvas) : cut;
       const w = (shape?.w ?? region.w) * scale, h = (shape?.h ?? region.h) * scale;
       art.save();
@@ -1319,7 +1589,7 @@ details[open] summary svg { transform: rotate(180deg); }
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const defaults = {
-    background: '#e9e7e3', light: 'soft', shadow: 32, softness: 48, direction: 'se', exposure: 0,
+    background: '#e9e7e3', glare: true, light: 'soft', shadow: 32, softness: 48, direction: 'se', exposure: 0,
     ratio: 'square', margin: 17, layout: 'original', gap: 6, orientation: 'auto', tolerance: 43, edge: 26, size: 1600, format: 'png'
   };
   const lighting = {
@@ -1354,7 +1624,8 @@ details[open] summary svg { transform: rotate(180deg); }
     $('[data-setting="format"] option[value="jpeg"]').disabled = settings.background === 'transparent';
     for (const input of settingInputs) {
       const key = input.dataset.setting;
-      input.value = String(settings[key]);
+      if (input.type === 'checkbox') input.checked = settings[key];
+      else input.value = String(settings[key]);
       if (input.type === 'range') {
         const sign = key === 'exposure' && settings[key] > 0 ? '+' : '';
         $('[data-out="' + key + '"]').textContent = sign + settings[key] + (percentKeys.has(key) ? '%' : '');
@@ -1521,7 +1792,8 @@ details[open] summary svg { transform: rotate(180deg); }
       const plan = Studio.render(preview, prepared.source, prepared, mask, settings, selected, 960);
       let corrected = plan?.rectified ? 'Edges straightened' : '';
       if (plan?.turned) corrected = plan.turned === 1 ? '1 book straightened' : plan.turned + ' books straightened';
-      $('#preview-status').textContent = !plan ? 'Cutout needs attention' : corrected || 'Result';
+      const changes = [corrected, plan?.glareCount ? 'Glare reduced' : ''].filter(Boolean);
+      $('#preview-status').textContent = !plan ? 'Cutout needs attention' : changes.join(' · ') || 'Result';
       if (plan?.artwork) $('#orientation-note').textContent = 'Orientation estimated from the cover. Use the rotate buttons if needed.';
     } else {
       drawSource(prepared, mask);
@@ -1551,7 +1823,8 @@ details[open] summary svg { transform: rotate(180deg); }
   for (const input of settingInputs) {
     input.addEventListener('input', () => {
       const key = input.dataset.setting;
-      change(key, typeof defaults[key] === 'number' ? Number(input.value) : input.value);
+      if (input.type === 'checkbox') change(key, input.checked);
+      else change(key, typeof defaults[key] === 'number' ? Number(input.value) : input.value);
     });
   }
   for (const button of $$('[data-background]')) button.onclick = () => change('background', button.dataset.background);
